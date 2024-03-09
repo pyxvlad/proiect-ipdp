@@ -1,0 +1,13 @@
+
+# Ignore direnv
+
+/.direnv/
+
+# Ignore generated files
+**/*_templ.go
+
+# Ignore generated tailwind style
+css/style.css
+
+# Ignore all log files
+**/*.log

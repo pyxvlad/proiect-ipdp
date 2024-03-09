@@ -1,0 +1,25 @@
+package templates
+
+templ Page(title string) {
+	<!DOCTYPE html>
+	<html>
+		<head>
+			<meta charset="UTF-8" />
+			<meta name="viewport" content="width=device-width, initial-scale=1" />
+			<link href="css/style.css" rel="stylesheet" />
+			<title>{ title }</title>
+		</head>
+		<body>
+			{ children... }
+			<footer>
+				<div class="h-0"></div>
+			</footer>
+		</body>
+	</html>
+}
+
+templ HelloPage() {
+	@Page("Hello Page") {
+		<p class="text-2xl">Hello World!</p>
+	}
+}
