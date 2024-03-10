@@ -24,12 +24,13 @@ func NewAppRouter(log *zerolog.Logger) *chi.Mux {
 }
 
 func shutdownHandler(server *http.Server, log *zerolog.Logger) {
-	sigint := make(chan os.Signal, 1)
+	const sigintChannelSize = 1;
+	sigint := make(chan os.Signal, sigintChannelSize)
 	defer close(sigint)
 	signal.Notify(sigint, os.Interrupt)
 	<-sigint
-	delta := 5 * time.Second
-	ctx, cancel := context.WithTimeout(context.Background(), delta)
+	const shutdownTimeout = 5 * time.Second
+	ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 	defer cancel()
 	err := server.Shutdown(ctx)
 	if err != nil {
@@ -38,7 +39,6 @@ func shutdownHandler(server *http.Server, log *zerolog.Logger) {
 }
 
 func ListenAndServe(log *zerolog.Logger) {
-
 	server := new(http.Server)
 	server.Addr = ":8080"
 	server.Handler = NewAppRouter(log)

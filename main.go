@@ -9,7 +9,6 @@ import (
 )
 
 func main() {
-
 	logFile, err := os.Create("ipdp.log")
 	if err != nil {
 		panic(err)

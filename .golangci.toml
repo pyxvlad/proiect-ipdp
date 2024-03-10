@@ -1,0 +1,44 @@
+[run]
+timeout = "5m"
+tests = true
+[linters]
+disable-all = true
+enable = [
+	# Default Linters:
+	"errcheck",
+	"govet",
+	"ineffassign",
+	"staticcheck",
+	"unused",
+	"gosimple",
+
+	# Other linters:
+
+	"asciicheck",
+	"bidichk",
+	"bodyclose",
+	"containedctx",
+	"contextcheck",
+	"errchkjson",
+	"errname",
+	"errorlint",
+	"exhaustive",
+	"exportloopref",
+	"goconst",
+	"gocritic",
+	"gocyclo",
+
+	"revive",
+	"zerologlint"
+]
+
+[linters-settings.revive]
+severity = "error"
+enable-all-rules = true
+
+[[linters-settings.revive.rules]]
+name = "line-length-limit"
+severity = "error"
+disabled = false
+exclude = [""]
+arguments = [80]

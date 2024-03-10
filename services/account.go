@@ -43,7 +43,6 @@ func NewAccountService() AccountService {
 		hasher:     generateBcryptPasswordHash,
 		comparator: compareBcryptPasswordHash,
 	}
-
 }
 
 type AccountData struct {
@@ -56,7 +55,6 @@ type AccountData struct {
 func (service *AccountService) CreateAccountWithEmail(
 	ctx context.Context, request AccountData,
 ) error {
-
 	log := zerolog.Ctx(ctx).With().Caller().Str("email", request.Email).Logger()
 	log.Info().Msg("creating account")
 
@@ -79,8 +77,15 @@ func (service *AccountService) CreateAccountWithEmail(
 	return nil
 }
 
-func (service *AccountService) Login(ctx context.Context, loginData AccountData) (models.Account, error) {
-	log := zerolog.Ctx(ctx).With().Caller().Str("email", loginData.Email).Logger()
+func (service *AccountService) Login(
+	ctx context.Context, loginData AccountData,
+) (models.Account, error) {
+	log := zerolog.Ctx(ctx).
+		With().
+		Caller().
+		Str("email", loginData.Email).
+		Logger()
+
 	log.Info().Msg("logging in account")
 
 	var account models.Account

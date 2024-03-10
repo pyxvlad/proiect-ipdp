@@ -76,10 +76,10 @@ const password = "catmeow"
 func TestCreateAccount(t *testing.T) {
 	ctx := Context(t)
 
-	FixtureAccount(t, ctx)
+	FixtureAccount(ctx, t)
 }
 
-func FixtureAccount(t *testing.T, ctx context.Context) {
+func FixtureAccount(ctx context.Context, t *testing.T) {
 	as := services.NewAccountService()
 	err := as.CreateAccountWithEmail(ctx, services.AccountData{
 		Email:    email,
@@ -94,7 +94,7 @@ func FixtureAccount(t *testing.T, ctx context.Context) {
 func TestLogin(t *testing.T) {
 	ctx := Context(t)
 
-	FixtureAccount(t, ctx)
+	FixtureAccount(ctx, t)
 
 	as := services.NewAccountService()
 	_, err := as.Login(ctx, services.AccountData{

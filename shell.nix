@@ -23,6 +23,8 @@ pkgs.mkShell {
 		templ
 		tailwindcss
 
+		golangci-lint
+
 		run
 	];
 }
