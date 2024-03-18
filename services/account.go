@@ -2,6 +2,9 @@ package services
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/base64"
+	"time"
 
 	"github.com/pyxvlad/proiect-ipdp/models"
 	"github.com/rs/zerolog"
@@ -107,4 +110,42 @@ func (service *AccountService) Login(
 
 	log.Info().Msg("account logged in")
 	return account, nil
+}
+
+func (service *AccountService) CreateSession(
+	ctx context.Context, accountID uint,
+) (models.Session, error) {
+	log := zerolog.Ctx(ctx).
+		With().
+		Caller().
+		Logger()
+
+	log.Info().Msg("creating session")
+
+	var session models.Session
+	session.DeletedAt.Valid = true
+	session.DeletedAt.Time = time.Now().Add(24 * 30 * time.Hour)
+
+	const TOKEN_BYTES = 32
+	var token [TOKEN_BYTES]byte
+	count, err := rand.Read(token[:])
+	if err != nil {
+		log.Err(err).Send()
+		return models.Session{}, err;
+	}
+
+	if count < TOKEN_BYTES {
+		log.Error().Msgf("read %d/%d out of required bytes for a token from crypto/rand", count, TOKEN_BYTES)
+	}
+
+	session.Token = base64.RawStdEncoding.EncodeToString(token[:])
+
+	db := DB(ctx)
+
+	err = db.Create(&session).Error
+	if err != nil {
+		return models.Session{}, err
+	}
+
+	return session, nil
 }

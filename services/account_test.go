@@ -91,6 +91,27 @@ func FixtureAccount(ctx context.Context, t *testing.T) {
 	}
 }
 
+func FixtureSession(ctx context.Context, t *testing.T) models.Session {
+	t.Helper()
+	as := services.NewAccountService()
+	account, err := as.Login(ctx, services.AccountData{
+		Email:    email,
+		Password: password,
+	})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+
+	session, err := as.CreateSession(ctx, account.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return session
+}
+
 func TestLogin(t *testing.T) {
 	ctx := Context(t)
 
@@ -105,4 +126,11 @@ func TestLogin(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+}
+
+func TestCreateSession(t * testing.T) {
+	ctx := Context(t)
+
+	FixtureAccount(ctx, t)
+	FixtureSession(ctx, t)
 }
