@@ -29,7 +29,12 @@ func main() {
 	writer := zerolog.MultiLevelWriter(logFile, consoleWriter)
 	log := zerolog.New(writer).With().Timestamp().Logger()
 
-	sqliteDB := sqlite.Open("ipdp.db")
+	dbPath, found := os.LookupEnv("IPDP_DB")
+	if !found {
+		dbPath = "./ipdp.db"
+	}
+	log.Info().Msgf("Opening DB at %s", dbPath)
+	sqliteDB := sqlite.Open(dbPath)
 
 	db, err := gorm.Open(sqliteDB, &gorm.Config{})
 
