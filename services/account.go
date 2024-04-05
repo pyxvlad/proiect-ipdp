@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
-	"time"
 
 	"github.com/pyxvlad/proiect-ipdp/models"
 	"github.com/rs/zerolog"
@@ -123,15 +122,13 @@ func (service *AccountService) CreateSession(
 	log.Info().Msg("creating session")
 
 	var session models.Session
-	session.DeletedAt.Valid = true
-	session.DeletedAt.Time = time.Now().Add(24 * 30 * time.Hour)
 
 	const TOKEN_BYTES = 32
 	var token [TOKEN_BYTES]byte
 	count, err := rand.Read(token[:])
 	if err != nil {
 		log.Err(err).Send()
-		return models.Session{}, err;
+		return models.Session{}, err
 	}
 
 	if count < TOKEN_BYTES {
@@ -139,6 +136,7 @@ func (service *AccountService) CreateSession(
 	}
 
 	session.Token = base64.RawStdEncoding.EncodeToString(token[:])
+	session.AccountID = accountID
 
 	db := DB(ctx)
 
@@ -148,4 +146,25 @@ func (service *AccountService) CreateSession(
 	}
 
 	return session, nil
+}
+
+func (as *AccountService) GetAccountForSession(
+	ctx context.Context, token string,
+) (models.Account, error) {
+	db := DB(ctx)
+	var session models.Session
+	tx := db.Take(&session, "token=?", token)
+
+	if tx.Error != nil {
+		return models.Account{}, tx.Error
+	}
+
+	var account models.Account
+
+	tx = db.Take(&account, "id = ?", session.AccountID)
+	if tx.Error != nil {
+		return models.Account{}, tx.Error
+	}
+
+	return account, nil
 }

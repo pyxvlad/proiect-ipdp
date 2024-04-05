@@ -104,7 +104,6 @@ func FixtureSession(ctx context.Context, t *testing.T) models.Session {
 		t.Fatal(err)
 	}
 
-
 	session, err := as.CreateSession(ctx, account.ID)
 	if err != nil {
 		t.Fatal(err)
@@ -146,10 +145,27 @@ func TestLogin(t *testing.T) {
 	}
 }
 
-func TestCreateSession(t * testing.T) {
+func TestCreateSession(t *testing.T) {
 	ctx := Context(t)
 
 	FixtureAccount(ctx, t)
 	FixtureSession(ctx, t)
 }
 
+func TestGetAccountFromSession(t *testing.T) {
+	ctx := Context(t)
+
+	FixtureAccount(ctx, t)
+	session := FixtureSession(ctx, t)
+	t.Logf("session: %#v\n", session)
+
+	as := services.NewAccountService()
+	account, err := as.GetAccountForSession(ctx, session.Token)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if session.AccountID != account.ID {
+		t.Fatal("I got the wrong account from the token")
+	}
+}
