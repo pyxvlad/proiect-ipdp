@@ -2,6 +2,7 @@ package services_test
 
 import (
 	"context"
+	"errors"
 	"os"
 	"path"
 	"testing"
@@ -20,7 +21,7 @@ func FreshDB(t *testing.T) *gorm.DB {
 	dbPath := path.Join(t.TempDir(), "tmp.db")
 	sqliteDB := sqlite.Open(dbPath)
 
-	db, err := gorm.Open(sqliteDB, &gorm.Config{})
+	db, err := gorm.Open(sqliteDB, &gorm.Config{TranslateError: true})
 
 	if err != nil {
 		t.Fatal(err)
@@ -112,6 +113,23 @@ func FixtureSession(ctx context.Context, t *testing.T) models.Session {
 	return session
 }
 
+func TestDuplicateAccount(t *testing.T) {
+	ctx := Context(t)
+
+	FixtureAccount(ctx, t)
+
+	as := services.NewAccountService()
+	err := as.CreateAccountWithEmail(ctx, services.AccountData{
+		Email:    email,
+		Password: password,
+	})
+
+	t.Logf("%#v", err)
+	if !errors.Is(err, gorm.ErrDuplicatedKey) {
+		t.Fatal("Should have gotten a duplicate key for the accounts.email")
+	}
+}
+
 func TestLogin(t *testing.T) {
 	ctx := Context(t)
 
@@ -134,3 +152,4 @@ func TestCreateSession(t * testing.T) {
 	FixtureAccount(ctx, t)
 	FixtureSession(ctx, t)
 }
+
