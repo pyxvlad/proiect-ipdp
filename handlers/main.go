@@ -82,5 +82,27 @@ func LogInAttempt(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
+	email := r.FormValue("email")
+	password := r.FormValue("password")
+
+	accountService := services.NewAccountService()
+	account, err := accountService.Login(r.Context(), services.AccountData{
+		Email:    email,
+		Password: password,
+	})
+	if err != nil {
+		panic(err)
+	}
+	session, err := accountService.CreateSession(r.Context(), account.ID)
+	if err != nil {
+		panic(err)
+	}
+	cookie := http.Cookie{
+		Name:   "token",
+		Value:  session.Token,
+		MaxAge: 0,
+	}
+	http.SetCookie(w, &cookie)
+	w.Header().Set("HX-Redirect", "/hello")
 	_ = log
 }

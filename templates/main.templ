@@ -80,7 +80,7 @@ templ LogInPage() {
 templ LogInForm(warning string) {
 	<form hx-post="/login/attempt" hx-target="this" hx-swap="outerHTML">
 		<div class="flex flex-col">
-			<div class="flex flex-col justify-around h-32">
+			<div class="flex flex-col justify-around h-24">
 				<div class="flex justify-between items-center mx-6 space-x-2 form-group">
 					<label>Email Address</label>
 					<input class="bg-ctp-surface0 border-solid focus:border-2 focus:outline-none focus:ring-0 focus:border-ctp-sky p-[2px] focus:p-0 rounded-md" type="email" name="email" value=""/>
