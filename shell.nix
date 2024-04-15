@@ -51,5 +51,7 @@ pkgs.mkShell {
 
 		ctpTW
 	];
+
+	NODE_PATH = "${ctpTW}/lib/node_modules";
 }
 
