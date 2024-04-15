@@ -1,6 +1,6 @@
 
--- name: CreateBook :exec
-INSERT INTO books (account_id, title, author, progress_id) VALUES ( @account_id, @title, @author, @progress_id );
+-- name: CreateBook :one
+INSERT INTO books (account_id, title, author, progress_id) VALUES ( @account_id, @title, @author, @progress_id ) RETURNING book_id;
 
 -- name: GetBooksWithStatuses :one
 SELECT title, author, status FROM books JOIN progresses ON books.progress_id = progresses.progress_id WHERE account_id = @account_id;

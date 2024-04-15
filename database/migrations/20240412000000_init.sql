@@ -47,7 +47,7 @@ CREATE TABLE books (
 
 	FOREIGN KEY(account_id) REFERENCES accounts(account_id),
 	FOREIGN KEY(duplicate_id) REFERENCES duplicates(duplicate_id),
-	FOREIGN KEY(progress_id) REFERENCES progress(progress_id)
+	FOREIGN KEY(progress_id) REFERENCES progresses(progress_id)
 );
 -- +goose StatementEnd
 

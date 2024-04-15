@@ -14,7 +14,14 @@ sql:
             go_type: "github.com/pyxvlad/proiect-ipdp/database/types.AccountID"
           - column: "books.account_id"
             go_type: "github.com/pyxvlad/proiect-ipdp/database/types.AccountID"
-          - column: "books.progress_id"
-            go_type: "int64"
           - column: "sessions.account_id"
             go_type: "github.com/pyxvlad/proiect-ipdp/database/types.AccountID"
+
+          - column: "books.progress_id"
+            go_type: "github.com/pyxvlad/proiect-ipdp/database/types.ProgressID"
+          - column: "progresses.progress_id"
+            go_type: "github.com/pyxvlad/proiect-ipdp/database/types.ProgressID"
+
+          - column: "books.book_id"
+            go_type: "github.com/pyxvlad/proiect-ipdp/database/types.BookID"
+

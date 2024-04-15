@@ -57,27 +57,27 @@ type AccountData struct {
 
 func (service *AccountService) CreateAccountWithEmail(
 	ctx context.Context, request AccountData,
-) error {
+) (types.AccountID, error) {
 	log := zerolog.Ctx(ctx).With().Caller().Str("email", request.Email).Logger()
 	log.Info().Msg("creating account")
 
 	hashed, err := service.hasher(request.Password)
 	if err != nil {
-		return err
+		return types.InvalidAccountID, err
 	}
 
-	_, err = DB(ctx).CreateAccountWithEmail(ctx, database.CreateAccountWithEmailParams{
+	accountID, err := DB(ctx).CreateAccountWithEmail(ctx, database.CreateAccountWithEmailParams{
 		Email:    request.Email,
 		Password: hashed,
 	})
 
 	if err != nil {
 		log.Err(err).Send()
-		return err
+		return types.InvalidAccountID, err
 	}
 
 	log.Info().Msg("created account")
-	return nil
+	return accountID, nil
 }
 
 func (service *AccountService) Login(
@@ -98,7 +98,6 @@ func (service *AccountService) Login(
 		return 0, err
 	}
 
-
 	err = service.comparator(row.Password, loginData.Password)
 	if err != nil {
 		log.Info().Msg("account had wrong password")
@@ -118,7 +117,6 @@ func (service *AccountService) CreateSession(
 		Logger()
 
 	log.Info().Msg("creating session")
-
 
 	const TOKEN_BYTES = 32
 	var token [TOKEN_BYTES]byte
