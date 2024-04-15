@@ -2,6 +2,7 @@ package routes
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"net/http"
 	"os"
@@ -12,10 +13,9 @@ import (
 	"github.com/pyxvlad/proiect-ipdp/handlers"
 	"github.com/pyxvlad/proiect-ipdp/services"
 	"github.com/rs/zerolog"
-	"gorm.io/gorm"
 )
 
-func NewAppRouter(log *zerolog.Logger, db *gorm.DB) *chi.Mux {
+func NewAppRouter(log *zerolog.Logger, db *sql.DB) *chi.Mux {
 	router := chi.NewRouter()
 
 	router.Use(func(next http.Handler) http.Handler {
@@ -59,7 +59,7 @@ func shutdownHandler(server *http.Server, log *zerolog.Logger) {
 	}
 }
 
-func ListenAndServe(log *zerolog.Logger, db *gorm.DB) {
+func ListenAndServe(log *zerolog.Logger, db *sql.DB) {
 	server := new(http.Server)
 	server.Addr = ":8080"
 	server.Handler = NewAppRouter(log, db)

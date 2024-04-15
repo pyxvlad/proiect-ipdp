@@ -1,14 +1,14 @@
 package main
 
 import (
+	"database/sql"
 	"os"
 	"time"
 
-	"github.com/pyxvlad/proiect-ipdp/models"
+	_ "github.com/mattn/go-sqlite3"
+	"github.com/pyxvlad/proiect-ipdp/database"
 	"github.com/pyxvlad/proiect-ipdp/routes"
 	"github.com/rs/zerolog"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
 )
 
 func main() {
@@ -29,18 +29,16 @@ func main() {
 	writer := zerolog.MultiLevelWriter(logFile, consoleWriter)
 	log := zerolog.New(writer).With().Timestamp().Logger()
 
-	sqliteDB := sqlite.Open("ipdp.db")
-
-	db, err := gorm.Open(sqliteDB, &gorm.Config{})
+	sqliteDB, err := sql.Open("sqlite3", "ipdp.db")
 
 	if err != nil {
 		log.Fatal().Err(err).Msg("While trying to open database")
 	}
 
-	err = models.AutoMigrate(db)
+	err = database.MigrateDB(sqliteDB)
 	if err != nil {
 		log.Fatal().Err(err).Msg("While trying to migrate database")
 	}
 
-	routes.ListenAndServe(&log, db)
+	routes.ListenAndServe(&log, sqliteDB)
 }

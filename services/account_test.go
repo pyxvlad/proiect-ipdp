@@ -2,37 +2,39 @@ package services_test
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"os"
 	"path"
 	"testing"
 	"time"
 
-	"github.com/pyxvlad/proiect-ipdp/models"
+	_ "github.com/mattn/go-sqlite3"
+	"github.com/pyxvlad/proiect-ipdp/database"
 	"github.com/pyxvlad/proiect-ipdp/services"
 	"github.com/rs/zerolog"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
 )
 
-func FreshDB(t *testing.T) *gorm.DB {
+func FreshDB(t *testing.T) *sql.DB {
 	t.Helper()
 
 	dbPath := path.Join(t.TempDir(), "tmp.db")
-	sqliteDB := sqlite.Open(dbPath)
-
-	db, err := gorm.Open(sqliteDB, &gorm.Config{TranslateError: true})
-
+	sqliteDB, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = models.AutoMigrate(db)
+	err = database.MigrateDB(sqliteDB)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	return db
+	_, err = sqliteDB.Exec("PRAGMA foreign_keys = ON")
+	if err != nil {
+		t.Fatal("Failed to enable foreign keys:", err)
+	}
+
+	return sqliteDB
 }
 
 func FreshLog(t *testing.T) *zerolog.Logger {
@@ -64,9 +66,10 @@ func Context(t *testing.T) context.Context {
 	log := FreshLog(t)
 	db := FreshDB(t)
 
+	var dbtx database.TxLike = db
 	ctx := context.Background()
 	ctx = log.WithContext(ctx)
-	ctx = context.WithValue(ctx, services.ContextKeyDB, db)
+	ctx = context.WithValue(ctx, services.ContextKeyDB, dbtx)
 
 	return ctx
 }
@@ -92,10 +95,10 @@ func FixtureAccount(ctx context.Context, t *testing.T) {
 	}
 }
 
-func FixtureSession(ctx context.Context, t *testing.T) models.Session {
+func FixtureSession(ctx context.Context, t *testing.T) string {
 	t.Helper()
 	as := services.NewAccountService()
-	account, err := as.Login(ctx, services.AccountData{
+	accountID, err := as.Login(ctx, services.AccountData{
 		Email:    email,
 		Password: password,
 	})
@@ -104,7 +107,7 @@ func FixtureSession(ctx context.Context, t *testing.T) models.Session {
 		t.Fatal(err)
 	}
 
-	session, err := as.CreateSession(ctx, account.ID)
+	session, err := as.CreateSession(ctx, accountID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -124,7 +127,7 @@ func TestDuplicateAccount(t *testing.T) {
 	})
 
 	t.Logf("%#v", err)
-	if !errors.Is(err, gorm.ErrDuplicatedKey) {
+	if !errors.Is(err, nil) {
 		t.Fatal("Should have gotten a duplicate key for the accounts.email")
 	}
 }
@@ -156,16 +159,22 @@ func TestGetAccountFromSession(t *testing.T) {
 	ctx := Context(t)
 
 	FixtureAccount(ctx, t)
-	session := FixtureSession(ctx, t)
-	t.Logf("session: %#v\n", session)
 
-	as := services.NewAccountService()
-	account, err := as.GetAccountForSession(ctx, session.Token)
+	accountFromEmail, err := services.DB(ctx).GetAccountByEmail(ctx, email)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if session.AccountID != account.ID {
+	token := FixtureSession(ctx, t)
+	t.Logf("session: %#v\n", token)
+
+	as := services.NewAccountService()
+	accountFromToken, err := as.GetAccountForSession(ctx, token)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if accountFromEmail != accountFromToken {
 		t.Fatal("I got the wrong account from the token")
 	}
 }

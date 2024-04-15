@@ -45,6 +45,7 @@ pkgs.mkShell {
 		tailwindcss
 
 		golangci-lint
+		sqlc
 
 		run
 

@@ -11,3 +11,7 @@ css/style.css
 
 # Ignore all log files
 **/*.log
+
+# SQLC generated files
+database/*.sql.go
+database/models.go
