@@ -3,10 +3,14 @@ package services_test
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"os"
 	"path"
+	"strings"
 	"testing"
 	"time"
+	"unicode"
+	"unicode/utf8"
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/pyxvlad/proiect-ipdp/database"
@@ -14,21 +18,82 @@ import (
 	"github.com/rs/zerolog"
 )
 
+var databasePath string
+
 func TestMain(m *testing.M) {
 
-	os.Exit(m.Run())
+	tmpdir, err := os.MkdirTemp("", "ipdp-test-db-*")
+	if err != nil {
+		panic(err)
+	}
+
+	dbPath := path.Join(tmpdir, "template.db")
+	sqliteDB, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		panic(err)
+	}
+
+	err = database.MigrateDB(sqliteDB)
+	if err != nil {
+		panic(err)
+	}
+
+	_, err = sqliteDB.Exec("PRAGMA foreign_keys = ON")
+	if err != nil {
+		panic(err)
+	}
+
+	err = sqliteDB.Close()
+	if err != nil {
+		panic(err)
+	}
+
+	databasePath = tmpdir
+
+
+	exitCode := m.Run()
+
+	if exitCode == 0 {
+		os.RemoveAll(tmpdir)
+	} else {
+		fmt.Println("TEST: the path with the databases is:", databasePath)
+	}
+
+	os.Exit(exitCode)
 }
 
 func FreshDB(t *testing.T) *sql.DB {
 	t.Helper()
 
-	dbPath := path.Join(t.TempDir(), "tmp.db")
-	sqliteDB, err := sql.Open("sqlite3", dbPath)
+	mapper := func(r rune) rune {
+		if r < utf8.RuneSelf {
+			const allowed = "!#$%&()+,-.=@^_{}~ "
+			if '0' <= r && r <= '9' ||
+				'a' <= r && r <= 'z' ||
+				'A' <= r && r <= 'Z' {
+				return r
+			}
+			if strings.ContainsRune(allowed, r) {
+				return r
+			}
+		} else if unicode.IsLetter(r) || unicode.IsNumber(r) {
+			return r
+		}
+		return -1
+	}
+	pattern := strings.Map(mapper, t.Name())
+
+	templateDB, err := os.ReadFile(path.Join(databasePath, "template.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	dbFile := path.Join(databasePath, pattern)
+	err = os.WriteFile(dbFile, templateDB, 0666)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = database.MigrateDB(sqliteDB)
+	sqliteDB, err := sql.Open("sqlite3", dbFile)
 	if err != nil {
 		t.Fatal(err)
 	}
