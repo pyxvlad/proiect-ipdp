@@ -1,6 +1,7 @@
 package services_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/pyxvlad/proiect-ipdp/database/types"
@@ -13,15 +14,38 @@ const (
 	bookStatus = types.StatusRead
 )
 
+func FixtureBook(ctx context.Context, t* testing.T) types.BookID {
+	t.Helper()
 
-func TestCreateBook(t *testing.T) {
-	ctx := Context(t)
 
 	bs := services.NewBookService()
 
 	accountID := FixtureAccount(ctx, t)
 
-	_, err := bs.CreateBook(ctx, accountID, bookTitle, bookAuthor, bookStatus)
+	bookID, err := bs.CreateBook(ctx, accountID, bookTitle, bookAuthor, bookStatus)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return bookID
+}
+
+
+func TestCreateBook(t *testing.T) {
+	t.Parallel()
+	ctx := Context(t)
+
+	FixtureBook(ctx, t)
+}
+
+func TestSetBookStatus(t *testing.T) {
+	t.Parallel()
+	ctx := Context(t)
+
+	bs := services.NewBookService()
+	bookID := FixtureBook(ctx, t)
+
+	err := bs.SetBookStatus(ctx, bookID, types.StatusInProgress)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -32,7 +32,7 @@ func (b *BookService) CreateBook(
 
 	queries := database.New(tx)
 
-	progressID, err := queries.CreateProgress(ctx, string(status))
+	progressID, err := queries.CreateProgress(ctx, status)
 	if err != nil {
 		log.Err(err).Msg("while trying to create progress for book")
 		return types.InvalidBookID, err
@@ -51,4 +51,17 @@ func (b *BookService) CreateBook(
 	}
 
 	return bookID, nil
+}
+
+func (b *BookService) SetBookStatus(
+	ctx context.Context, bookID types.BookID, status types.Status,
+) error {
+	err := DB(ctx).SetBookStatus(ctx, database.SetBookStatusParams{
+		Status: status,
+		BookID: bookID,
+	})
+	if err != nil {
+		return err
+	}
+	return nil
 }

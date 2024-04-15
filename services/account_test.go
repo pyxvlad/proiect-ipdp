@@ -13,6 +13,7 @@ const email = "cat@meow.com"
 const password = "catmeow"
 
 func TestCreateAccount(t *testing.T) {
+	t.Parallel()
 	ctx := Context(t)
 
 	FixtureAccount(ctx, t)
@@ -53,6 +54,7 @@ func FixtureSession(ctx context.Context, t *testing.T) string {
 }
 
 func TestDuplicateAccount(t *testing.T) {
+	t.Parallel()
 	ctx := Context(t)
 
 	FixtureAccount(ctx, t)
@@ -70,6 +72,7 @@ func TestDuplicateAccount(t *testing.T) {
 }
 
 func TestLogin(t *testing.T) {
+	t.Parallel()
 	ctx := Context(t)
 
 	FixtureAccount(ctx, t)
@@ -86,6 +89,7 @@ func TestLogin(t *testing.T) {
 }
 
 func TestCreateSession(t *testing.T) {
+	t.Parallel()
 	ctx := Context(t)
 
 	FixtureAccount(ctx, t)
@@ -93,6 +97,7 @@ func TestCreateSession(t *testing.T) {
 }
 
 func TestGetAccountFromSession(t *testing.T) {
+	t.Parallel()
 	ctx := Context(t)
 
 	FixtureAccount(ctx, t)

@@ -25,3 +25,8 @@ sql:
           - column: "books.book_id"
             go_type: "github.com/pyxvlad/proiect-ipdp/database/types.BookID"
 
+          - column: "progresses.status"
+            go_type: "github.com/pyxvlad/proiect-ipdp/database/types.Status"
+
+
+
