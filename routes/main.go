@@ -41,6 +41,10 @@ func NewAppRouter(log *zerolog.Logger, db *gorm.DB) *chi.Mux {
 		r.Get("/", handlers.LogInPage)
 		r.Post("/attempt", handlers.LogInAttempt)
 	})
+
+	router.HandleFunc("/samples", handlers.SampleBookCards)
+	router.HandleFunc("/addbook", handlers.AddBookPage)
+
 	return router
 }
 

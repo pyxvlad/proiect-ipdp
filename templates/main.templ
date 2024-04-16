@@ -1,5 +1,8 @@
 package templates
 
+// Page represents the page template.
+//
+// NOTE: the header will overlap with the page's content
 templ Page(title string) {
 	<!DOCTYPE html>
 	<html>
@@ -11,9 +14,11 @@ templ Page(title string) {
 			<title>{ title }</title>
 		</head>
 		<body class="ctp-mocha bg-ctp-base">
+			// this will overlap with the page content
 			<div class="ctp-mocha bg-ctp-base w-screen px-7 py-4 fixed">
 				<p class="ctp-mocha text-ctp-text text-3xl">{ title }</p>
 			</div>
+			//
 			//<div class="h-16"></div>
 			<div class="text-ctp-text">
 				{ children... }
@@ -23,6 +28,13 @@ templ Page(title string) {
 			</footer>
 		</body>
 	</html>
+}
+
+templ PageWithoutOverlap(title string) {
+	@Page(title) {
+		<div class="h-[4.5rem]"></div>
+		{ children... }
+	}
 }
 
 templ HelloPage() {
@@ -96,4 +108,19 @@ templ LogInForm(warning string) {
 			<button class="btn px-4 py-2 my-2 font-semibold text-sm bg-ctp-surface0 hover:bg-sky-400 focus:bg-sky-400 rounded-full w-auto mx-auto" type="submit">Submit</button>
 		</div>
 	</form>
+}
+
+templ AddBookPage() {
+	@Page("Add book") {
+		<form>
+			<div class="flex flex-col justify-center items-center h-screen">
+				<label>Title</label>
+				<input class="bg-ctp-surface0 border-solid focus:border-2 focus:outline-none focus:ring-0 focus:border-ctp-sky p-[2px] focus:p-0 rounded-md" type="text" name="addbook" value="" placeholder="Book title..."/>
+				<label>Author</label>
+				<input class="bg-ctp-surface0 border-solid focus:border-2 focus:outline-none focus:ring-0 focus:border-ctp-sky p-[2px] focus:p-0 rounded-md" type="text" name="addbook" value="" placeholder="Author's name..."/>
+				<label>Publisher</label>
+				<input class="bg-ctp-surface0 border-solid focus:border-2 focus:outline-none focus:ring-0 focus:border-ctp-sky p-[2px] focus:p-0 rounded-md" type="text" name="addbook" value="" placeholder="Publisher's name..."/>
+			</div>
+		</form>
+	}
 }

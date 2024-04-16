@@ -106,3 +106,9 @@ func LogInAttempt(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("HX-Redirect", "/hello")
 	_ = log
 }
+
+func AddBookPage(w http.ResponseWriter, r *http.Request) {
+	log := zerolog.Ctx(r.Context())
+	err := templates.AddBookPage().Render(r.Context(), w)
+	log.Err(err).Send()
+}
