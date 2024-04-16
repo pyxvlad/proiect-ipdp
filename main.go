@@ -35,7 +35,7 @@ func main() {
 	}
 	log.Info().Msgf("Opening DB at %s", dbPath)
 
-	sqliteDB, err := sql.Open("sqlite3", "ipdp.db")
+	sqliteDB, err := sql.Open("sqlite3", dbPath)
 
 	if err != nil {
 		log.Fatal().Err(err).Msg("While trying to open database")

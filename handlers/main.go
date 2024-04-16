@@ -86,20 +86,20 @@ func LogInAttempt(w http.ResponseWriter, r *http.Request) {
 	password := r.FormValue("password")
 
 	accountService := services.NewAccountService()
-	account, err := accountService.Login(r.Context(), services.AccountData{
+	accountID, err := accountService.Login(r.Context(), services.AccountData{
 		Email:    email,
 		Password: password,
 	})
 	if err != nil {
 		panic(err)
 	}
-	session, err := accountService.CreateSession(r.Context(), account.ID)
+	token, err := accountService.CreateSession(r.Context(), accountID)
 	if err != nil {
 		panic(err)
 	}
 	cookie := http.Cookie{
 		Name:   "token",
-		Value:  session.Token,
+		Value:  token,
 		MaxAge: 0,
 	}
 	http.SetCookie(w, &cookie)
