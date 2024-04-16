@@ -45,10 +45,13 @@ pkgs.mkShell {
 		tailwindcss
 
 		golangci-lint
+		sqlc
 
 		run
 
 		ctpTW
 	];
+
+	NODE_PATH = "${ctpTW}/lib/node_modules";
 }
 
