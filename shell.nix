@@ -8,6 +8,8 @@ let
 		${pkgs.templ}/bin/templ generate
 		${pkgs.tailwindcss}/bin/tailwindcss -i css/tw.css -o css/style.css
 
+		$(cd database; ${pkgs.sqlc}/bin/sqlc generate)
+
 		echo "Starting server"
 
 		${pkgs.go}/bin/go run .
