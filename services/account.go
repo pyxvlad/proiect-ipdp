@@ -4,9 +4,9 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
-	"time"
 
-	"github.com/pyxvlad/proiect-ipdp/models"
+	"github.com/pyxvlad/proiect-ipdp/database"
+	"github.com/pyxvlad/proiect-ipdp/database/types"
 	"github.com/rs/zerolog"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -57,32 +57,32 @@ type AccountData struct {
 
 func (service *AccountService) CreateAccountWithEmail(
 	ctx context.Context, request AccountData,
-) error {
+) (types.AccountID, error) {
 	log := zerolog.Ctx(ctx).With().Caller().Str("email", request.Email).Logger()
 	log.Info().Msg("creating account")
 
 	hashed, err := service.hasher(request.Password)
 	if err != nil {
-		return err
+		return types.InvalidAccountID, err
 	}
 
-	result := DB(ctx).Create(&models.Account{
+	accountID, err := DB(ctx).CreateAccountWithEmail(ctx, database.CreateAccountWithEmailParams{
 		Email:    request.Email,
 		Password: hashed,
 	})
 
-	if result.Error != nil {
-		log.Err(result.Error).Send()
-		return result.Error
+	if err != nil {
+		log.Err(err).Send()
+		return types.InvalidAccountID, err
 	}
 
 	log.Info().Msg("created account")
-	return nil
+	return accountID, nil
 }
 
 func (service *AccountService) Login(
 	ctx context.Context, loginData AccountData,
-) (models.Account, error) {
+) (types.AccountID, error) {
 	log := zerolog.Ctx(ctx).
 		With().
 		Caller().
@@ -91,30 +91,26 @@ func (service *AccountService) Login(
 
 	log.Info().Msg("logging in account")
 
-	var account models.Account
+	row, err := DB(ctx).GetPasswordByEmail(ctx, loginData.Email)
 
-	result := DB(ctx).
-		Where("email = ?", loginData.Email).
-		Take(&account)
-
-	if result.Error != nil {
-		log.Err(result.Error).Msg("failed to login")
-		return models.Account{}, result.Error
+	if err != nil {
+		log.Err(err).Msg("failed to login")
+		return 0, err
 	}
 
-	err := service.comparator(account.Password, loginData.Password)
+	err = service.comparator(row.Password, loginData.Password)
 	if err != nil {
 		log.Info().Msg("account had wrong password")
-		return models.Account{}, err
+		return 0, err
 	}
 
 	log.Info().Msg("account logged in")
-	return account, nil
+	return row.AccountID, nil
 }
 
 func (service *AccountService) CreateSession(
-	ctx context.Context, accountID uint,
-) (models.Session, error) {
+	ctx context.Context, accountID types.AccountID,
+) (string, error) {
 	log := zerolog.Ctx(ctx).
 		With().
 		Caller().
@@ -122,30 +118,35 @@ func (service *AccountService) CreateSession(
 
 	log.Info().Msg("creating session")
 
-	var session models.Session
-	session.DeletedAt.Valid = true
-	session.DeletedAt.Time = time.Now().Add(24 * 30 * time.Hour)
-
 	const TOKEN_BYTES = 32
 	var token [TOKEN_BYTES]byte
 	count, err := rand.Read(token[:])
 	if err != nil {
 		log.Err(err).Send()
-		return models.Session{}, err;
+		return "", err
 	}
 
 	if count < TOKEN_BYTES {
 		log.Error().Msgf("read %d/%d out of required bytes for a token from crypto/rand", count, TOKEN_BYTES)
 	}
 
-	session.Token = base64.RawStdEncoding.EncodeToString(token[:])
+	var sessionData database.CreateSessionTokenParams
+	sessionData.Token = base64.RawStdEncoding.EncodeToString(token[:])
+	sessionData.AccountID = accountID
 
-	db := DB(ctx)
+	err = DB(ctx).CreateSessionToken(ctx, sessionData)
 
-	err = db.Create(&session).Error
 	if err != nil {
-		return models.Session{}, err
+		return "", err
 	}
 
-	return session, nil
+	return sessionData.Token, nil
+}
+
+func (as *AccountService) GetAccountForSession(
+	ctx context.Context, token string,
+) (types.AccountID, error) {
+	accountID, err := DB(ctx).GetSessionAccount(ctx, token)
+
+	return accountID, err
 }

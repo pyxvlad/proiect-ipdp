@@ -1,0 +1,32 @@
+version: "2"
+sql:
+  - engine: "sqlite"
+    queries: "./queries"
+    schema: "./migrations"
+    gen:
+      go:
+        package: "database"
+        out: "."
+        emit_json_tags: true
+        json_tags_case_style: snake
+        overrides:
+          - column: "accounts.account_id"
+            go_type: "github.com/pyxvlad/proiect-ipdp/database/types.AccountID"
+          - column: "books.account_id"
+            go_type: "github.com/pyxvlad/proiect-ipdp/database/types.AccountID"
+          - column: "sessions.account_id"
+            go_type: "github.com/pyxvlad/proiect-ipdp/database/types.AccountID"
+
+          - column: "books.progress_id"
+            go_type: "github.com/pyxvlad/proiect-ipdp/database/types.ProgressID"
+          - column: "progresses.progress_id"
+            go_type: "github.com/pyxvlad/proiect-ipdp/database/types.ProgressID"
+
+          - column: "books.book_id"
+            go_type: "github.com/pyxvlad/proiect-ipdp/database/types.BookID"
+
+          - column: "progresses.status"
+            go_type: "github.com/pyxvlad/proiect-ipdp/database/types.Status"
+
+
+

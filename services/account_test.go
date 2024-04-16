@@ -2,86 +2,26 @@ package services_test
 
 import (
 	"context"
-	"os"
-	"path"
+	"errors"
 	"testing"
-	"time"
 
-	"github.com/pyxvlad/proiect-ipdp/models"
+	"github.com/pyxvlad/proiect-ipdp/database/types"
 	"github.com/pyxvlad/proiect-ipdp/services"
-	"github.com/rs/zerolog"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
 )
-
-func FreshDB(t *testing.T) *gorm.DB {
-	t.Helper()
-
-	dbPath := path.Join(t.TempDir(), "tmp.db")
-	sqliteDB := sqlite.Open(dbPath)
-
-	db, err := gorm.Open(sqliteDB, &gorm.Config{})
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	err = models.AutoMigrate(db)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	return db
-}
-
-func FreshLog(t *testing.T) *zerolog.Logger {
-	t.Helper()
-
-	logPath := path.Join(t.TempDir(), "test.log")
-	logFile, err := os.Create(logPath)
-	if err != nil {
-		panic(err)
-	}
-	t.Cleanup(func() {
-		err := logFile.Close()
-		if err != nil {
-			panic(err)
-		}
-	})
-	consoleWriter := zerolog.ConsoleWriter{
-		Out:        os.Stderr,
-		TimeFormat: time.RFC3339,
-	}
-	writer := zerolog.MultiLevelWriter(logFile, consoleWriter)
-	log := zerolog.New(writer).With().Timestamp().Logger()
-	log.Debug().Msgf("log path: %s", logPath)
-	return &log
-}
-
-func Context(t *testing.T) context.Context {
-	t.Helper()
-	log := FreshLog(t)
-	db := FreshDB(t)
-
-	ctx := context.Background()
-	ctx = log.WithContext(ctx)
-	ctx = context.WithValue(ctx, services.ContextKeyDB, db)
-
-	return ctx
-}
 
 const email = "cat@meow.com"
 const password = "catmeow"
 
 func TestCreateAccount(t *testing.T) {
+	t.Parallel()
 	ctx := Context(t)
 
 	FixtureAccount(ctx, t)
 }
 
-func FixtureAccount(ctx context.Context, t *testing.T) {
+func FixtureAccount(ctx context.Context, t *testing.T) types.AccountID {
 	as := services.NewAccountService()
-	err := as.CreateAccountWithEmail(ctx, services.AccountData{
+	accountID, err := as.CreateAccountWithEmail(ctx, services.AccountData{
 		Email:    email,
 		Password: password,
 	})
@@ -89,12 +29,14 @@ func FixtureAccount(ctx context.Context, t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	return accountID
 }
 
-func FixtureSession(ctx context.Context, t *testing.T) models.Session {
+func FixtureSession(ctx context.Context, t *testing.T) string {
 	t.Helper()
 	as := services.NewAccountService()
-	account, err := as.Login(ctx, services.AccountData{
+	accountID, err := as.Login(ctx, services.AccountData{
 		Email:    email,
 		Password: password,
 	})
@@ -103,8 +45,7 @@ func FixtureSession(ctx context.Context, t *testing.T) models.Session {
 		t.Fatal(err)
 	}
 
-
-	session, err := as.CreateSession(ctx, account.ID)
+	session, err := as.CreateSession(ctx, accountID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -112,7 +53,26 @@ func FixtureSession(ctx context.Context, t *testing.T) models.Session {
 	return session
 }
 
+func TestDuplicateAccount(t *testing.T) {
+	t.Parallel()
+	ctx := Context(t)
+
+	FixtureAccount(ctx, t)
+
+	as := services.NewAccountService()
+	_, err := as.CreateAccountWithEmail(ctx, services.AccountData{
+		Email:    email,
+		Password: password,
+	})
+
+	t.Logf("%#v", err)
+	if !errors.Is(err, nil) {
+		t.Fatal("Should have gotten a duplicate key for the accounts.email")
+	}
+}
+
 func TestLogin(t *testing.T) {
+	t.Parallel()
 	ctx := Context(t)
 
 	FixtureAccount(ctx, t)
@@ -128,9 +88,35 @@ func TestLogin(t *testing.T) {
 	}
 }
 
-func TestCreateSession(t * testing.T) {
+func TestCreateSession(t *testing.T) {
+	t.Parallel()
 	ctx := Context(t)
 
 	FixtureAccount(ctx, t)
 	FixtureSession(ctx, t)
+}
+
+func TestGetAccountFromSession(t *testing.T) {
+	t.Parallel()
+	ctx := Context(t)
+
+	FixtureAccount(ctx, t)
+
+	accountFromEmail, err := services.DB(ctx).GetAccountByEmail(ctx, email)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	token := FixtureSession(ctx, t)
+	t.Logf("session: %#v\n", token)
+
+	as := services.NewAccountService()
+	accountFromToken, err := as.GetAccountForSession(ctx, token)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if accountFromEmail != accountFromToken {
+		t.Fatal("I got the wrong account from the token")
+	}
 }

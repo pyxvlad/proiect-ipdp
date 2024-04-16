@@ -1,14 +1,14 @@
 package main
 
 import (
+	"database/sql"
 	"os"
 	"time"
 
-	"github.com/pyxvlad/proiect-ipdp/models"
+	_ "github.com/mattn/go-sqlite3"
+	"github.com/pyxvlad/proiect-ipdp/database"
 	"github.com/pyxvlad/proiect-ipdp/routes"
 	"github.com/rs/zerolog"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
 )
 
 func main() {
@@ -34,18 +34,17 @@ func main() {
 		dbPath = "./ipdp.db"
 	}
 	log.Info().Msgf("Opening DB at %s", dbPath)
-	sqliteDB := sqlite.Open(dbPath)
 
-	db, err := gorm.Open(sqliteDB, &gorm.Config{})
+	sqliteDB, err := sql.Open("sqlite3", "ipdp.db")
 
 	if err != nil {
 		log.Fatal().Err(err).Msg("While trying to open database")
 	}
 
-	err = models.AutoMigrate(db)
+	err = database.MigrateDB(sqliteDB)
 	if err != nil {
 		log.Fatal().Err(err).Msg("While trying to migrate database")
 	}
 
-	routes.ListenAndServe(&log, db)
+	routes.ListenAndServe(&log, sqliteDB)
 }
