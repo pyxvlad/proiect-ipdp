@@ -87,7 +87,7 @@ func FreshDB(t *testing.T) *sql.DB {
 	if err != nil {
 		t.Fatal(err)
 	}
-	dbFile := path.Join(databasePath, pattern)
+	dbFile := path.Join(databasePath, pattern + ".db")
 	err = os.WriteFile(dbFile, templateDB, 0666)
 	if err != nil {
 		t.Fatal(err)
@@ -97,6 +97,13 @@ func FreshDB(t *testing.T) *sql.DB {
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	t.Cleanup(func() {
+		cleanupErr := sqliteDB.Close()
+		if cleanupErr != nil {
+			panic(cleanupErr)
+		}
+	})
 
 	_, err = sqliteDB.Exec("PRAGMA foreign_keys = ON")
 	if err != nil {

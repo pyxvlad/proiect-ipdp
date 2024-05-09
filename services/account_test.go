@@ -20,9 +20,23 @@ func TestCreateAccount(t *testing.T) {
 }
 
 func FixtureAccount(ctx context.Context, t *testing.T) types.AccountID {
+	t.Helper()
+	return FixtureAccountWithSeed(ctx, t, "")
+}
+
+var fixtureAccounts map[string]types.AccountID
+
+func FixtureAccountWithSeed(ctx context.Context, t *testing.T, seed string) types.AccountID {
+	t.Helper()
+
+	accountID, found := fixtureAccounts[seed]
+	if found {
+		return accountID
+	}
+
 	as := services.NewAccountService()
 	accountID, err := as.CreateAccountWithEmail(ctx, services.AccountData{
-		Email:    email,
+		Email:    seed + email,
 		Password: password,
 	})
 
