@@ -140,3 +140,29 @@ func (b *BookService) MarkBookAsDuplicate(ctx context.Context, bookID types.Book
 	}
 	return nil
 }
+
+type BookData struct {
+	BookID types.BookID
+	Title string
+	Author string
+	Status types.Status
+}
+
+func (b * BookService) ListBooksForAccount(ctx context.Context, accountID types.AccountID) ([]BookData, error) {
+	rows, err := DB(ctx).GetBooksWithStatuses(ctx, accountID)
+	if err != nil {
+		return nil, err
+	}
+
+	data := make([]BookData, 0, len(rows))
+	for _, row := range rows {
+		var bd BookData
+		bd.Title = row.Title
+		bd.Author = row.Author
+		bd.Status = row.Status
+		bd.BookID = row.BookID
+		data = append(data, bd)
+	}
+
+	return data, nil
+}

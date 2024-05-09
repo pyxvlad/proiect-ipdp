@@ -7,6 +7,7 @@ import (
 
 	"github.com/pyxvlad/proiect-ipdp/database/types"
 	"github.com/pyxvlad/proiect-ipdp/services"
+	"github.com/rs/zerolog"
 )
 
 const email = "cat@meow.com"
@@ -24,13 +25,18 @@ func FixtureAccount(ctx context.Context, t *testing.T) types.AccountID {
 	return FixtureAccountWithSeed(ctx, t, "")
 }
 
-var fixtureAccounts map[string]types.AccountID
-
 func FixtureAccountWithSeed(ctx context.Context, t *testing.T, seed string) types.AccountID {
 	t.Helper()
 
+	log := zerolog.Ctx(ctx).With().Str("test_name", t.Name()).Logger()
+
+	fixtureAccounts := ctx.Value(ContextKeyFixtureAccountsCache).(FixtureAccountsCache)
+
 	accountID, found := fixtureAccounts[seed]
 	if found {
+		log.Debug().
+			Int64("account_id", int64(accountID)).
+			Msg("found account in fixture account cache")
 		return accountID
 	}
 
@@ -43,6 +49,12 @@ func FixtureAccountWithSeed(ctx context.Context, t *testing.T, seed string) type
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	fixtureAccounts[seed] = accountID;
+
+	log.Debug().
+		Int64("account_id", int64(accountID)).
+		Msg("freshly made")
 
 	return accountID
 }

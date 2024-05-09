@@ -14,6 +14,7 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/pyxvlad/proiect-ipdp/database"
+	"github.com/pyxvlad/proiect-ipdp/database/types"
 	"github.com/pyxvlad/proiect-ipdp/services"
 	"github.com/rs/zerolog"
 )
@@ -137,6 +138,9 @@ func FreshLog(t *testing.T) *zerolog.Logger {
 	return &log
 }
 
+const ContextKeyFixtureAccountsCache services.ContextKey = "testing:fixture-accounts-cache"
+type FixtureAccountsCache = map[string]types.AccountID
+
 func Context(t *testing.T) context.Context {
 	t.Helper()
 	log := FreshLog(t)
@@ -146,6 +150,7 @@ func Context(t *testing.T) context.Context {
 	ctx := context.Background()
 	ctx = log.WithContext(ctx)
 	ctx = context.WithValue(ctx, services.ContextKeyDB, dbtx)
+	ctx = context.WithValue(ctx, ContextKeyFixtureAccountsCache, make(FixtureAccountsCache, 0))
 
 	return ctx
 }

@@ -105,3 +105,35 @@ func TestMarkBookAsDuplicate(t *testing.T) {
 
 
 }
+
+func TestListBooks(t *testing.T) {
+	t.Parallel()
+	ctx := Context(t)
+
+	bs := services.NewBookService()
+	bookIDA := FixtureBookWithSeed(ctx, t, "A")
+	bookIDB := FixtureBookWithSeed(ctx, t, "B")
+
+	accountID := FixtureAccount(ctx, t)
+
+	books, err := bs.ListBooksForAccount(ctx, accountID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(books) != 2 {
+		t.Fatal("Expected 2 books, got", len(books))
+	}
+
+	for _, book := range books {
+		// TODO(vlad): use table testing for this maybe?
+		if book.BookID == bookIDA && (book.Title != (bookTitle + " " + "A")) {
+			t.Fatal("wrong book title on book A: ", book.Title)
+		}
+
+		if book.BookID == bookIDB && (book.Title != (bookTitle + " " + "B")) {
+			t.Fatal("wrong book title on book B: ", book.Title)
+		}
+	}
+	
+}
