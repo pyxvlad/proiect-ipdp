@@ -2,7 +2,12 @@ package services
 
 import (
 	"context"
+	"crypto/sha256"
 	"database/sql"
+	"encoding/hex"
+	"io"
+	"os"
+	"path"
 
 	"github.com/pyxvlad/proiect-ipdp/database"
 	"github.com/pyxvlad/proiect-ipdp/database/types"
@@ -10,10 +15,13 @@ import (
 )
 
 type BookService struct {
+	ImagePath string
 }
 
-func NewBookService() BookService {
-	return BookService{}
+func NewBookService(imagePath string) BookService {
+	return BookService{
+		ImagePath: imagePath,
+	}
 }
 
 // CreateBook creates a new book.
@@ -165,4 +173,34 @@ func (b * BookService) ListBooksForAccount(ctx context.Context, accountID types.
 	}
 
 	return data, nil
+}
+
+func (b *BookService) SetBookCover(ctx context.Context, bookID types.BookID, cover_image io.Reader) (error) {
+	hasher := sha256.New()
+	tee := io.TeeReader(cover_image, hasher)
+	file, err := os.CreateTemp("/tmp/ipdp-img", "")
+	if err != nil {
+		return err
+	}
+	_, err = io.Copy(file, tee)
+	if err != nil {
+		return err
+	}
+
+	hash := hex.EncodeToString(hasher.Sum(nil))
+
+	err = os.Rename(file.Name(), path.Join(b.ImagePath, hash))
+	if err != nil {
+		return err
+	}
+
+	err = DB(ctx).SetBookCoverHash(ctx, database.SetBookCoverHashParams{
+		CoverHash: sql.NullString{
+			String: hash,
+			Valid: true,
+		},
+		BookID: bookID,
+	})
+
+	return err
 }

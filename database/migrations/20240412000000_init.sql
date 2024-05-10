@@ -42,6 +42,8 @@ CREATE TABLE books (
 	title text NOT NULL,
 	author text NOT NULL,
 
+	cover_hash text,
+
 	duplicate_id INTEGER DEFAULT NULL,
 	progress_id INTEGER NOT NULL,
 
