@@ -196,8 +196,7 @@ func TestSetBookCover(t *testing.T) {
 		t.Fatal(err)
 	}
 
-
-	rows, err := services.DB(ctx).GetBooksWithCoversAndStatuses(ctx, FixtureAccount(ctx, t))
+	rows, err := bs.ListBooksWithCoversForAccount(ctx, FixtureAccount(ctx, t))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -210,11 +209,11 @@ func TestSetBookCover(t *testing.T) {
 		t.Fatal("got the wrong book")
 	}
 
-	if !rows[0].CoverHash.Valid {
+	if rows[0].CoverHash == "" {
 		t.Fatal("expected the book to have the cover hash set")
 	}
 
-	data, err := os.ReadFile(path.Join(bs.ImagePath, rows[0].CoverHash.String))
+	data, err := os.ReadFile(path.Join(bs.ImagePath, rows[0].CoverHash))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -222,5 +221,5 @@ func TestSetBookCover(t *testing.T) {
 	if !bytes.Equal(samplePNG, data) {
 		t.Fatal("the sample file and the saved one differ")
 	}
-	
+
 }
