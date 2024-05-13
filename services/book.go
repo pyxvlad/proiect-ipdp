@@ -31,6 +31,7 @@ func (b *BookService) CreateBook(
 	title string,
 	author string,
 	status types.Status,
+	publisherID types.PublisherID,
 ) (types.BookID, error) {
 	log := zerolog.Ctx(ctx)
 
@@ -54,6 +55,7 @@ func (b *BookService) CreateBook(
 		Title:      title,
 		Author:     author,
 		ProgressID: progressID,
+		PublisherID: publisherID,
 	})
 
 	if err != nil {
@@ -238,4 +240,13 @@ func (b *BookService) ListBooksWithCoversForAccount(
 
 	return data, nil
 
+}
+
+func (b *BookService) SetBookPublisher(
+	ctx context.Context, bookID types.BookID, publisherID types.PublisherID,
+) error {
+	return DB(ctx).ChangePublisher(ctx, database.ChangePublisherParams{
+		PublisherID: publisherID,
+		BookID:      bookID,
+	})
 }

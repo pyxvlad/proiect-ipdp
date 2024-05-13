@@ -16,6 +16,8 @@ sql:
             go_type: "github.com/pyxvlad/proiect-ipdp/database/types.AccountID"
           - column: "sessions.account_id"
             go_type: "github.com/pyxvlad/proiect-ipdp/database/types.AccountID"
+          - column: "publishers.account_id"
+            go_type: "github.com/pyxvlad/proiect-ipdp/database/types.AccountID"
 
           - column: "books.progress_id"
             go_type: "github.com/pyxvlad/proiect-ipdp/database/types.ProgressID"
@@ -24,6 +26,14 @@ sql:
 
           - column: "books.book_id"
             go_type: "github.com/pyxvlad/proiect-ipdp/database/types.BookID"
+
+          - column: "publishers.publisher_id"
+            go_type: "github.com/pyxvlad/proiect-ipdp/database/types.PublisherID"
+
+          - column: "books.publisher_id"
+            go_type: "github.com/pyxvlad/proiect-ipdp/database/types.PublisherID"
+
+
 
           - column: "progresses.status"
             go_type: "github.com/pyxvlad/proiect-ipdp/database/types.Status"

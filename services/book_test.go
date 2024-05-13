@@ -27,8 +27,16 @@ func FixtureBookWithSeed(ctx context.Context, t *testing.T, seed string) types.B
 	bs := FixtureBookService(ctx, t)
 
 	accountID := FixtureAccount(ctx, t)
+	publisherID := FixturePublisher(ctx, t)
 
-	bookID, err := bs.CreateBook(ctx, accountID, bookTitle+" "+seed, bookAuthor, bookStatus)
+	bookID, err := bs.CreateBook(
+		ctx,
+		accountID,
+		bookTitle+" "+seed,
+		bookAuthor,
+		bookStatus,
+		publisherID,
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
