@@ -111,16 +111,32 @@ templ LogInForm(warning string) {
 }
 
 templ AddBookPage() {
-	@Page("Add book") {
+	@PageWithoutOverlap("Add book") {
 		<form>
-			<div class="flex flex-col justify-center items-center h-screen">
+			<div class="flex flex-col items-center h-screen">
+				<label>Preview</label>
+				@BookCardPreview(BookCard{
+					Name:     "",
+					Author:   "",
+					ImageURL: "",
+				})
+				<label for="coverupload" class="bg-ctp-surface0 border-solid focus:border-2 focus:outline-none focus:ring-0 focus:border-ctp-sky p-[2px] focus:p-0 rounded-md">Cover</label>
+				<input id="coverupload" hx-encoding="multipart/form-data" hx-post="/books/cards/preview" hx-target="#preview" hx-swap="outerHTML" class="hidden" type="file" name="cover" value="" placeholder="Book title..."/>
 				<label>Title</label>
-				<input class="bg-ctp-surface0 border-solid focus:border-2 focus:outline-none focus:ring-0 focus:border-ctp-sky p-[2px] focus:p-0 rounded-md" type="text" name="addbook" value="" placeholder="Book title..."/>
+				<input hx-encoding="multipart/form-data" hx-post="/books/cards/preview" hx-trigger="input changed delay:1s" hx-target="#preview" hx-swap="outerHTML" class="bg-ctp-surface0 border-solid focus:border-2 focus:outline-none focus:ring-0 focus:border-ctp-sky p-[2px] focus:p-0 rounded-md" type="text" name="title" value="" placeholder="Book title..."/>
 				<label>Author</label>
-				<input class="bg-ctp-surface0 border-solid focus:border-2 focus:outline-none focus:ring-0 focus:border-ctp-sky p-[2px] focus:p-0 rounded-md" type="text" name="addbook" value="" placeholder="Author's name..."/>
+				<input hx-encoding="multipart/form-data" hx-post="/books/cards/preview" hx-trigger="input changed delay:1s" hx-target="#preview" hx-swap="outerHTML" class="bg-ctp-surface0 border-solid focus:border-2 focus:outline-none focus:ring-0 focus:border-ctp-sky p-[2px] focus:p-0 rounded-md" type="text" name="author" value="" placeholder="Author's name..."/>
 				<label>Publisher</label>
-				<input class="bg-ctp-surface0 border-solid focus:border-2 focus:outline-none focus:ring-0 focus:border-ctp-sky p-[2px] focus:p-0 rounded-md" type="text" name="addbook" value="" placeholder="Publisher's name..."/>
+				<input class="bg-ctp-surface0 border-solid focus:border-2 focus:outline-none focus:ring-0 focus:border-ctp-sky p-[2px] focus:p-0 rounded-md" type="text" name="publisher" value="" placeholder="Publisher's name..."/>
+				<label>Series</label>
+				<input class="bg-ctp-surface0 border-solid focus:border-2 focus:outline-none focus:ring-0 focus:border-ctp-sky p-[2px] focus:p-0 rounded-md" type="text" name="series" value="" placeholder="Series name..."/>
 			</div>
 		</form>
 	}
+}
+
+templ BookCardPreview(card BookCard) {
+	<div id="preview" class="flex flex-col justify-center items-center w-1/2">
+		@bookCardWrapper(card)
+	</div>
 }

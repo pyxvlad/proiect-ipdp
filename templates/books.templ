@@ -1,7 +1,6 @@
 package templates
 
 import "fmt"
-import "strings"
 
 type BookCard struct {
 	Author   string
@@ -24,13 +23,30 @@ templ bookCard(author string, title string) {
 	</div>
 }
 
+css backgroundImg(url string) {
+	background-image: { templ.SafeCSSProperty(fmt.Sprintf("url('%s')",url)) };
+}
+
+/*background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center;
+*/
+
 templ bookCardWrapper(info BookCard) {
-	@templ.Raw(fmt.Sprintf(`<div 
-							class="flex flex-col-reverse aspect-[10/16] w-11/12 rounded-xl shadow-black bg-zinc-900 m-auto bg-cover"
-							style="background-image: url('%s')"
-							>`, info.ImageURL))
-	@bookCard(info.Author, info.Name)
-	@templ.Raw(`</div>`)
+	<div
+		class={
+			"flex",
+			"flex-col-reverse aspect-[10/16] w-11/12 rounded-xl shadow-black bg-zinc-900 m-auto",
+			"bg-center",
+			"bg-no-repeat",
+			templ.KV(backgroundImg(info.ImageURL), info.ImageURL != ""),
+			templ.KV("bg-cover", info.ImageURL != ""),
+			templ.KV(backgroundImg("/assets/thenounproject-white.png"), info.ImageURL == ""),
+			templ.KV("bg-contain", info.ImageURL == ""),
+		}
+	>
+		@bookCard(info.Author, info.Name)
+	</div>
 }
 
 templ thebookGrid() {

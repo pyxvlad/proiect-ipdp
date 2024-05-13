@@ -2,10 +2,15 @@ package handlers
 
 import (
 	"context"
+	"encoding/base64"
+	"errors"
+	"fmt"
+	"io"
 	"net/http"
 	"strings"
 
 	"github.com/pyxvlad/proiect-ipdp/templates"
+	"github.com/rs/zerolog"
 )
 
 // SampleBookCards generates 16 sample book cards, and then renders them to a page.
@@ -28,4 +33,43 @@ func SampleBookCards(w http.ResponseWriter, r *http.Request) {
 	}
 
 	templates.BookCardsPage(infos).Render(context.TODO(), w)
+}
+
+func PreviewCard(w http.ResponseWriter, r *http.Request) {
+	log := zerolog.Ctx(r.Context())
+
+	err := r.ParseMultipartForm(10 << 20)
+	if err != nil {
+		// TODO(ora44): Find better way to handle this
+		panic(err)
+	}
+
+	title := r.FormValue("title")
+	author := r.FormValue("author")
+	file, header, err := r.FormFile("cover")
+	_ = header
+	var dataURL = ""
+
+	if err == nil || !errors.Is(err, http.ErrMissingFile) {
+		if err != nil {
+			log.Err(err).Msg("Could not upload image")
+			return
+		}
+		data, err := io.ReadAll(file)
+		if err != nil {
+			log.Err(err).Msg("Could not read all image")
+			return
+		}
+		encoded64 := base64.StdEncoding.EncodeToString(data)
+		dataURL = fmt.Sprintf("data:image/png;base64,%s", encoded64)
+	}
+
+	err = templates.BookCardPreview(templates.BookCard{
+		Name:     title,
+		Author:   author,
+		ImageURL: dataURL,
+	}).Render(r.Context(), w)
+	if err != nil {
+		log.Err(err).Msg("Trouble updating the preview")
+	}
 }

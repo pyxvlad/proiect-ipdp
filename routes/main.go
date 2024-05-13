@@ -44,6 +44,10 @@ func NewAppRouter(log *zerolog.Logger, db *sql.DB) *chi.Mux {
 
 	router.HandleFunc("/samples", handlers.SampleBookCards)
 	router.HandleFunc("/addbook", handlers.AddBookPage)
+	router.Post("/books/cards/preview", handlers.PreviewCard)
+
+	fs := http.FileServer(http.Dir("./assets/"))
+	router.Handle("/assets/*", http.StripPrefix("/assets/", fs))
 
 	return router
 }
