@@ -35,6 +35,15 @@ CREATE TABLE duplicates (
 -- +goose StatementEnd
 
 -- +goose StatementBegin
+CREATE TABLE publishers (
+	publisher_id INTEGER PRIMARY KEY,
+	account_id INTEGER NOT NULL,
+
+	name text NOT NULL
+);
+-- +goose StatementEnd
+
+-- +goose StatementBegin
 CREATE TABLE books (
 	book_id INTEGER PRIMARY KEY,
 	account_id INTEGER NOT NULL,
@@ -46,11 +55,14 @@ CREATE TABLE books (
 
 	duplicate_id INTEGER DEFAULT NULL,
 	progress_id INTEGER NOT NULL,
+	publisher_id INTEGER NOT NULL,
 
 	FOREIGN KEY(account_id) REFERENCES accounts(account_id),
 	FOREIGN KEY(duplicate_id) REFERENCES duplicates(duplicate_id),
-	FOREIGN KEY(progress_id) REFERENCES progresses(progress_id)
+	FOREIGN KEY(progress_id) REFERENCES progresses(progress_id),
+	FOREIGN KEY(publisher_id) REFERENCES publishers(publisher_id)
 );
 -- +goose StatementEnd
+
 
 

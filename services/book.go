@@ -31,6 +31,7 @@ func (b *BookService) CreateBook(
 	title string,
 	author string,
 	status types.Status,
+	publisherID types.PublisherID,
 ) (types.BookID, error) {
 	log := zerolog.Ctx(ctx)
 
@@ -54,6 +55,7 @@ func (b *BookService) CreateBook(
 		Title:      title,
 		Author:     author,
 		ProgressID: progressID,
+		PublisherID: publisherID,
 	})
 
 	if err != nil {
@@ -151,12 +153,12 @@ func (b *BookService) MarkBookAsDuplicate(ctx context.Context, bookID types.Book
 
 type BookData struct {
 	BookID types.BookID
-	Title string
+	Title  string
 	Author string
 	Status types.Status
 }
 
-func (b * BookService) ListBooksForAccount(ctx context.Context, accountID types.AccountID) ([]BookData, error) {
+func (b *BookService) ListBooksForAccount(ctx context.Context, accountID types.AccountID) ([]BookData, error) {
 	rows, err := DB(ctx).GetBooksWithStatuses(ctx, accountID)
 	if err != nil {
 		return nil, err
@@ -175,7 +177,7 @@ func (b * BookService) ListBooksForAccount(ctx context.Context, accountID types.
 	return data, nil
 }
 
-func (b *BookService) SetBookCover(ctx context.Context, bookID types.BookID, cover_image io.Reader) (error) {
+func (b *BookService) SetBookCover(ctx context.Context, bookID types.BookID, cover_image io.Reader) error {
 	hasher := sha256.New()
 	tee := io.TeeReader(cover_image, hasher)
 	file, err := os.CreateTemp("/tmp/ipdp-img", "")
@@ -197,10 +199,54 @@ func (b *BookService) SetBookCover(ctx context.Context, bookID types.BookID, cov
 	err = DB(ctx).SetBookCoverHash(ctx, database.SetBookCoverHashParams{
 		CoverHash: sql.NullString{
 			String: hash,
-			Valid: true,
+			Valid:  true,
 		},
 		BookID: bookID,
 	})
 
 	return err
+}
+
+type BookDataWithCovers struct {
+	BookID    types.BookID
+	Title     string
+	Author    string
+	Status    types.Status
+	CoverHash string
+}
+
+func (b *BookService) ListBooksWithCoversForAccount(
+	ctx context.Context, accountID types.AccountID,
+) ([]BookDataWithCovers, error) {
+	rows, err := DB(ctx).GetBooksWithCoversAndStatuses(ctx, accountID)
+	if err != nil {
+		return nil, err
+	}
+
+	data := make([]BookDataWithCovers, 0, len(rows))
+	for _, row := range rows {
+		var bd BookDataWithCovers
+		bd.Title = row.Title
+		bd.Author = row.Author
+		bd.Status = row.Status
+		bd.BookID = row.BookID
+		if row.CoverHash.Valid {
+			bd.CoverHash = row.CoverHash.String
+		} else {
+			bd.CoverHash = ""
+		}
+		data = append(data, bd)
+	}
+
+	return data, nil
+
+}
+
+func (b *BookService) SetBookPublisher(
+	ctx context.Context, bookID types.BookID, publisherID types.PublisherID,
+) error {
+	return DB(ctx).ChangePublisher(ctx, database.ChangePublisherParams{
+		PublisherID: publisherID,
+		BookID:      bookID,
+	})
 }
