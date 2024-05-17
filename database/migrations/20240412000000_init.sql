@@ -64,5 +64,56 @@ CREATE TABLE books (
 );
 -- +goose StatementEnd
 
+-- +goose StatementBegin
+CREATE TABLE series (
+	series_id INTEGER PRIMARY KEY,
+	account_id INTEGER,
 
+	name text NOT NULL,
+
+	FOREIGN KEY(account_id) REFERENCES accounts(account_id)
+);
+-- +goose StatementEnd
+
+-- +goose StatementBegin
+CREATE TABLE book_series (
+	series_id INTEGER,
+	book_id INTEGER,
+
+	volume INTEGER NOT NULL,
+
+	PRIMARY KEY(series_id, book_id),
+	FOREIGN KEY(book_id) REFERENCES books(book_id),
+	FOREIGN KEY(series_id) REFERENCES series(series_id),
+
+	CHECK ( volume is null OR volume > 0 )
+);
+-- +goose StatementEnd
+
+-- +goose StatementBegin
+CREATE TABLE collections (
+	collection_id INTEGER PRIMARY KEY,
+	account_id INTEGER,
+
+	name text NOT NULL,
+
+	FOREIGN KEY(account_id) REFERENCES accounts(account_id)
+);
+-- +goose StatementEnd
+
+-- +goose StatementBegin
+CREATE TABLE book_collections (
+	collection_id INTEGER,
+	book_id INTEGER,
+
+	book_number INTEGER,
+
+	PRIMARY KEY(collection_id, book_id),
+	FOREIGN KEY(book_id) REFERENCES books(book_id),
+	FOREIGN KEY(collection_id) REFERENCES collections(collection_id),
+
+
+	CHECK ( book_number > 0 )
+);
+-- +goose StatementEnd
 

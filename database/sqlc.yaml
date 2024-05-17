@@ -10,6 +10,7 @@ sql:
         emit_json_tags: true
         json_tags_case_style: snake
         overrides:
+          # account_id
           - column: "accounts.account_id"
             go_type: "github.com/pyxvlad/proiect-ipdp/database/types.AccountID"
           - column: "books.account_id"
@@ -18,23 +19,48 @@ sql:
             go_type: "github.com/pyxvlad/proiect-ipdp/database/types.AccountID"
           - column: "publishers.account_id"
             go_type: "github.com/pyxvlad/proiect-ipdp/database/types.AccountID"
+          - column: "series.account_id"
+            go_type: "github.com/pyxvlad/proiect-ipdp/database/types.AccountID"
+          - column: "collections.account_id"
+            go_type: "github.com/pyxvlad/proiect-ipdp/database/types.AccountID"
 
+          # progress_id
           - column: "books.progress_id"
             go_type: "github.com/pyxvlad/proiect-ipdp/database/types.ProgressID"
           - column: "progresses.progress_id"
             go_type: "github.com/pyxvlad/proiect-ipdp/database/types.ProgressID"
 
+          # book_id
           - column: "books.book_id"
             go_type: "github.com/pyxvlad/proiect-ipdp/database/types.BookID"
+          - column: "book_series.book_id"
+            go_type: "github.com/pyxvlad/proiect-ipdp/database/types.BookID"
+          - column: "book_collections.book_id"
+            go_type: "github.com/pyxvlad/proiect-ipdp/database/types.BookID"
 
+          # publisher_id
           - column: "publishers.publisher_id"
             go_type: "github.com/pyxvlad/proiect-ipdp/database/types.PublisherID"
-
           - column: "books.publisher_id"
             go_type: "github.com/pyxvlad/proiect-ipdp/database/types.PublisherID"
 
+          # collection_id
+          - column: "collections.collection_id"
+            go_type: "github.com/pyxvlad/proiect-ipdp/database/types.CollectionID"
+          - column: "book_collections.collection_id"
+            go_type: "github.com/pyxvlad/proiect-ipdp/database/types.CollectionID"
 
+          # series_id
+          - column: "series.series_id"
+            go_type: "github.com/pyxvlad/proiect-ipdp/database/types.SeriesID"
+          - column: "book_series.series_id"
+            go_type: "github.com/pyxvlad/proiect-ipdp/database/types.SeriesID"
 
+          # series.volume
+          - column: "book_series.volume"
+            go_type: "uint"
+
+          # status
           - column: "progresses.status"
             go_type: "github.com/pyxvlad/proiect-ipdp/database/types.Status"
 
