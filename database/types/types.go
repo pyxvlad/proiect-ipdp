@@ -26,6 +26,16 @@ const (
 	StatusUncertain  Status = "uncertain"
 )
 
+func GetAllStatuses() []Status {
+	return []Status{
+		StatusToBeRead,
+		StatusInProgress,
+		StatusRead,
+		StatusUncertain,
+		StatusDropped,
+	}
+}
+
 func (s Status) String() string {
 	return string(s)
 }
