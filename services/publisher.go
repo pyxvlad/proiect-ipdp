@@ -5,6 +5,7 @@ import (
 
 	"github.com/pyxvlad/proiect-ipdp/database"
 	"github.com/pyxvlad/proiect-ipdp/database/types"
+	"github.com/rs/zerolog"
 )
 
 type PublisherService struct {
@@ -20,7 +21,7 @@ func (ps *PublisherService) CreatePublisher(
 	publisherID, err := DB(ctx).CreatePublisher(
 		ctx, database.CreatePublisherParams{
 			AccountID: accountID,
-			Name: name,
+			Name:      name,
 		},
 	)
 
@@ -33,8 +34,7 @@ func (ps *PublisherService) CreatePublisher(
 
 type PublisherData struct {
 	PublisherID types.PublisherID
-	Name string
-
+	Name        string
 }
 
 func (ps *PublisherService) ListPublishers(
@@ -47,9 +47,9 @@ func (ps *PublisherService) ListPublishers(
 
 	publishers := make([]PublisherData, 0, len(rows))
 	for _, row := range rows {
-		data := PublisherData {
+		data := PublisherData{
 			PublisherID: row.PublisherID,
-			Name: row.Name,
+			Name:        row.Name,
 		}
 		publishers = append(publishers, data)
 	}
@@ -57,3 +57,44 @@ func (ps *PublisherService) ListPublishers(
 	return publishers, nil
 }
 
+func (ps *PublisherService) RenamePublisher(
+	ctx context.Context,
+	accountID types.AccountID,
+	publisherID types.PublisherID,
+	newName string,
+) error {
+	log := zerolog.Ctx(ctx)
+	err := DB(ctx).RenamePublisher(ctx, database.RenamePublisherParams{
+		Name:        newName,
+		PublisherID: publisherID,
+		AccountID:   accountID,
+	})
+
+	if err != nil {
+		log.Err(err).Int64("publisher_id", int64(publisherID)).Msg("couldn't rename publisher")
+
+		return err
+	}
+
+	return err
+}
+
+func (ps *PublisherService) DeletePublisher(
+	ctx context.Context,
+	accountID types.AccountID,
+	publisherID types.PublisherID,
+) error {
+	log := zerolog.Ctx(ctx)
+	err := DB(ctx).DeletePublisher(ctx, database.DeletePublisherParams{
+		PublisherID: publisherID,
+		AccountID:   accountID,
+	})
+
+	if err != nil {
+		log.Err(err).Int64("publisher_id", int64(publisherID)).Msg("couldn't delete publisher")
+
+		return err
+	}
+
+	return err
+}
