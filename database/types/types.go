@@ -19,11 +19,11 @@ const (
 type Status string
 
 const (
-	StatusToBeRead   Status = "to be read"
-	StatusInProgress Status = "in progress"
-	StatusRead       Status = "read"
-	StatusDropped    Status = "dropped"
-	StatusUncertain  Status = "uncertain"
+	StatusToBeRead   Status = "To be read"
+	StatusInProgress Status = "In progress"
+	StatusRead       Status = "Read"
+	StatusDropped    Status = "Dropped"
+	StatusUncertain  Status = "Uncertain"
 )
 
 func GetAllStatuses() []Status {
