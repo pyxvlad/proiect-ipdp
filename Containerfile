@@ -27,4 +27,5 @@ RUN go build .
 
 VOLUME [ "/data" ]
 ENV IPDP_DB=/data/ipdp.db
+ENV IPDP_COVERPATH=/data/covers
 CMD ./proiect-ipdp

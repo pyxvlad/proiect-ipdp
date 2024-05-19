@@ -22,7 +22,7 @@ CREATE TABLE sessions (
 -- +goose StatementBegin
 CREATE TABLE progresses (
 	progress_id INTEGER PRIMARY KEY,
-	status text CHECK ( status IN ('to be read', 'in progress', 'read', 'dropped', 'uncertain') ) NOT NULL DEFAULT 'to be read'
+	status text CHECK ( status IN ('To be read', 'In progress', 'Read', 'Dropped', 'Uncertain') ) NOT NULL DEFAULT 'To be read'
 );
 -- +goose StatementEnd
 

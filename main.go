@@ -46,5 +46,21 @@ func main() {
 		log.Fatal().Err(err).Msg("While trying to migrate database")
 	}
 
-	routes.ListenAndServe(&log, sqliteDB)
+	coverPath, found := os.LookupEnv("IPDP_COVERPATH")
+	if !found {
+		coverPath = "./covers"
+	}
+	log.Info().Msgf("Storing covers at %s", coverPath)
+
+	err = os.MkdirAll(coverPath, 0777)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Couldn't create folder for storing covers")
+	}
+
+	err = os.MkdirAll("/tmp/ipdp-img/", 0777)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Couldn't create temp folder for storing covers")
+	}
+
+	routes.ListenAndServe(&log, sqliteDB, coverPath)
 }

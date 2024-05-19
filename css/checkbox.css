@@ -1,0 +1,14 @@
+input[type=checkbox] {
+    width: 2rem;
+    height: 2rem;
+    box-sizing: border-box;
+    background-size: cover;
+    appearance: none;
+    outline: 0;
+    border: 0;
+    background-image: url("/assets/checkbox-false-cat-svgrepo-com.svg");
+}
+
+input[type=checkbox]:checked {
+    background-image: url("/assets/checkbox-true-cat-svgrepo-com.svg");
+}

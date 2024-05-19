@@ -1,9 +1,12 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 	"net/mail"
+	"strconv"
 
+	"github.com/pyxvlad/proiect-ipdp/database/types"
 	"github.com/pyxvlad/proiect-ipdp/services"
 	"github.com/pyxvlad/proiect-ipdp/templates"
 	"github.com/rs/zerolog"
@@ -101,14 +104,145 @@ func LogInAttempt(w http.ResponseWriter, r *http.Request) {
 		Name:   "token",
 		Value:  token,
 		MaxAge: 0,
+		Path:   "/",
 	}
 	http.SetCookie(w, &cookie)
 	w.Header().Set("HX-Redirect", "/hello")
 	_ = log
 }
 
+func IDFromForm[T ~int64](r *http.Request, key string) T {
+	parsedID, err := strconv.ParseInt(r.FormValue(key), 10, 64)
+	if err != nil {
+		parsedID = 0
+	}
+	return T(parsedID)
+}
+
 func AddBookPage(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	log := zerolog.Ctx(ctx)
+	log.Debug().Str("http_method", r.Method).Send()
+	if r.Method == http.MethodGet {
+		err := templates.AddBookPage().Render(r.Context(), w)
+		log.Err(err).Send()
+		return
+	}
+	if r.Method != http.MethodPost {
+		panic("Wrong method")
+	}
+
+	err := r.ParseMultipartForm(10 << 20)
+	if err != nil {
+		// TODO(ora44): Find better way to handle this
+		panic(err)
+	}
+
+	title := r.FormValue("title")
+	author := r.FormValue("author")
+	statusRaw := r.FormValue("status")
+
+	file, header, coverErr := r.FormFile("cover")
+	publisher := r.FormValue("publisher")
+	collection := r.FormValue("collection")
+	series := r.FormValue("series")
+	publisherID := IDFromForm[types.PublisherID](r, "publisher_id")
+	collectionID := IDFromForm[types.CollectionID](r, "collection_id")
+	seriesID := IDFromForm[types.SeriesID](r, "series_id")
+	duplicateID := IDFromForm[types.BookID](r, "book_id")
+
+	// TODO: use header
+	_ = header
+
+	bs := services.NewBookService(services.CoverPath(ctx))
+
+	css := services.NewCollectionSeriesService()
+	ps := services.NewPublisherService()
+	if publisherID == types.InvalidPublisherID && publisher != "" {
+		publisherID, err = ps.CreatePublisher(ctx, publisher, AccountID(ctx))
+		if err != nil {
+			log.Err(err).Msg("while trying to create publisher")
+			return
+		}
+	} else if publisherID == types.InvalidPublisherID && publisher == "" {
+		log.Error().Msg("while ceva")
+		// TODO: show it to the user
+		return
+	}
+
+	bookID, err := bs.CreateBook(ctx, AccountID(ctx), title, author, types.Status(statusRaw), publisherID)
+	if err != nil {
+		log.Err(err).Msg("while trying to create book")
+		return
+	}
+
+	if coverErr == nil || !errors.Is(coverErr, http.ErrMissingFile) {
+		if coverErr != nil {
+			log.Err(coverErr).Msg("Could not upload image")
+			return
+		}
+
+		err = bs.SetBookCover(ctx, bookID, file)
+		if err != nil {
+			log.Err(err).Msg("while trying to set cover image")
+			return
+		}
+	}
+
+	collectionNumber := IDFromForm[int64](r, "collection-numeric")
+
+	if collectionID != types.InvalidCollectionID {
+		err = css.AddBookToCollection(ctx, bookID, collectionID, uint(collectionNumber))
+		if err != nil {
+			log.Err(err).Msg("while trying to add book to collection")
+			return
+		}
+	} else if collection != "" {
+		collectionID, err = css.CreateCollection(ctx, AccountID(ctx), collection)
+		if err != nil {
+			log.Err(err).Msg("while trying to create collection")
+			return
+		}
+		err = css.AddBookToCollection(ctx, bookID, collectionID, uint(collectionNumber))
+		if err != nil {
+			log.Err(err).Msg("while trying to add book to collection")
+			return
+		}
+	}
+
+	seriesNumber := IDFromForm[int64](r, "series-numeric")
+
+	if seriesID != types.InvalidSeriesID {
+		err = css.AddBookToSeries(ctx, bookID, seriesID, uint(seriesNumber))
+		if err != nil {
+			log.Err(err).Msg("while trying to add book to series")
+			return
+		}
+	} else if series != "" {
+		seriesID, err = css.CreateSeries(ctx, AccountID(ctx), series)
+		if err != nil {
+			log.Err(err).Msg("while trying to create series")
+			return
+		}
+		err = css.AddBookToSeries(ctx, bookID, seriesID, uint(seriesNumber))
+		if err != nil {
+			log.Err(err).Msg("while trying to add book to series")
+			return
+		}
+	}
+
+	if duplicateID != types.InvalidBookID {
+		err = bs.MarkBookAsDuplicate(ctx, types.BookID(bookID), duplicateID)
+		if err != nil {
+			log.Err(err).Msg("while trying to mark book as duplicate")
+			return
+		}
+	}
+
+}
+
+func Menu(w http.ResponseWriter, r *http.Request) {
 	log := zerolog.Ctx(r.Context())
-	err := templates.AddBookPage().Render(r.Context(), w)
+	err := templates.Menu().Render(r.Context(), w)
 	log.Err(err).Send()
 }

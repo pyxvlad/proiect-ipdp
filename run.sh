@@ -7,5 +7,7 @@ $(cd database; sqlc generate)
 
 echo "Starting server"
 export IPDP_DB=appdata/ipdp.db
+export IPDP_COVERPATH=appdata/covers
+
 go run .
 

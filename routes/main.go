@@ -15,13 +15,14 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func NewAppRouter(log *zerolog.Logger, db *sql.DB) *chi.Mux {
+func NewAppRouter(log *zerolog.Logger, db *sql.DB, coverPath string) *chi.Mux {
 	router := chi.NewRouter()
 
 	router.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := log.WithContext(r.Context())
 			ctx = context.WithValue(ctx, services.ContextKeyDB, db)
+			ctx = context.WithValue(ctx, services.ContextKeyCoverPath, coverPath)
 			requestWithLogger := r.WithContext(ctx)
 			next.ServeHTTP(w, requestWithLogger)
 		})
@@ -43,8 +44,17 @@ func NewAppRouter(log *zerolog.Logger, db *sql.DB) *chi.Mux {
 	})
 
 	router.HandleFunc("/samples", handlers.SampleBookCards)
-	router.HandleFunc("/addbook", handlers.AddBookPage)
+	router.With(handlers.LoginMiddleware).HandleFunc("/addbook", handlers.AddBookPage)
+	router.HandleFunc("/menu", handlers.Menu)
 	router.Post("/books/cards/preview", handlers.PreviewCard)
+
+	router.Route("/suggestions", func(r chi.Router) {
+		r.Use(handlers.LoginMiddleware)
+		r.Get("/publisher", handlers.SuggestPublishers)
+		r.Get("/collection", handlers.SuggestCollection)
+		r.Get("/series", handlers.SuggestSeries)
+		r.Get("/duplicate", handlers.SuggestDuplicates)
+	})
 
 	fs := http.FileServer(http.Dir("./assets/"))
 	router.Handle("/assets/*", http.StripPrefix("/assets/", fs))
@@ -67,10 +77,10 @@ func shutdownHandler(server *http.Server, log *zerolog.Logger) {
 	}
 }
 
-func ListenAndServe(log *zerolog.Logger, db *sql.DB) {
+func ListenAndServe(log *zerolog.Logger, db *sql.DB, coverPath string) {
 	server := new(http.Server)
 	server.Addr = ":8080"
-	server.Handler = NewAppRouter(log, db)
+	server.Handler = NewAppRouter(log, db, coverPath)
 	go shutdownHandler(server, log)
 	err := server.ListenAndServe()
 	if err != nil && !errors.Is(err, http.ErrServerClosed) {

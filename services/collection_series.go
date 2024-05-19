@@ -11,6 +11,10 @@ import (
 type CollectionSeriesService struct {
 }
 
+func NewCollectionSeriesService() CollectionSeriesService {
+	return CollectionSeriesService{}
+}
+
 func (css *CollectionSeriesService) CreateSeries(ctx context.Context, accountID types.AccountID, name string) (types.SeriesID, error) {
 	return DB(ctx).CreateSeries(ctx, database.CreateSeriesParams{
 		Name:      name,

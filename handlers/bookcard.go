@@ -9,15 +9,16 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/pyxvlad/proiect-ipdp/database/types"
 	"github.com/pyxvlad/proiect-ipdp/templates"
 	"github.com/rs/zerolog"
 )
 
 // SampleBookCards generates 16 sample book cards, and then renders them to a page.
 func SampleBookCards(w http.ResponseWriter, r *http.Request) {
-	infos := make([]templates.BookCard, 0, 16)
+	infos := make([]templates.BookCard, 0, 24)
 
-	for i := 0; i != 16; i++ {
+	for i := 0; i != 24; i++ {
 		var author string
 		if i%2 == 0 {
 			author = "no spaces"
@@ -25,9 +26,10 @@ func SampleBookCards(w http.ResponseWriter, r *http.Request) {
 			author = "with spaces"
 		}
 		bc := templates.BookCard{
-			Name:     strings.Repeat("yep"+strings.Repeat(" ", i%2), i),
+			Title:    strings.Repeat("yep"+strings.Repeat(" ", i%2), i),
 			Author:   author,
 			ImageURL: "https://cdn.dc5.ro/img-prod/2191826525-0.jpeg",
+			Status:   types.StatusToBeRead,
 		}
 		infos = append(infos, bc)
 	}
@@ -46,6 +48,7 @@ func PreviewCard(w http.ResponseWriter, r *http.Request) {
 
 	title := r.FormValue("title")
 	author := r.FormValue("author")
+	statusRaw := r.FormValue("status")
 	file, header, err := r.FormFile("cover")
 	_ = header
 	var dataURL = ""
@@ -65,9 +68,10 @@ func PreviewCard(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = templates.BookCardPreview(templates.BookCard{
-		Name:     title,
+		Title:    title,
 		Author:   author,
 		ImageURL: dataURL,
+		Status:   types.Status(statusRaw),
 	}).Render(r.Context(), w)
 	if err != nil {
 		log.Err(err).Msg("Trouble updating the preview")
