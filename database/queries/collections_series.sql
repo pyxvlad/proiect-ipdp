@@ -27,3 +27,15 @@ SELECT series_id, name FROM series WHERE account_id = @accoount_id;
 
 -- name: ListCollectionsForAccount :many
 SELECT collection_id, name FROM collections WHERE account_id = @accoount_id;
+
+-- name: GetSeriesForBook :one
+SELECT name, volume
+FROM book_series JOIN series
+ON book_series.series_id = series.series_id
+WHERE account_id = @account_id AND book_id = @book_id;
+
+-- name: GetCollectionForBook :one
+SELECT name, book_number
+FROM book_collections JOIN collections
+ON book_collections.collection_id = collections.collection_id
+WHERE account_id = @account_id AND book_id = @book_id;

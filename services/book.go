@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"database/sql"
 	"encoding/hex"
+	"errors"
 	"io"
 	"os"
 	"path"
@@ -51,10 +52,10 @@ func (b *BookService) CreateBook(
 	}
 
 	bookID, err := queries.CreateBook(ctx, database.CreateBookParams{
-		AccountID:  account,
-		Title:      title,
-		Author:     author,
-		ProgressID: progressID,
+		AccountID:   account,
+		Title:       title,
+		Author:      author,
+		ProgressID:  progressID,
 		PublisherID: publisherID,
 	})
 
@@ -249,4 +250,112 @@ func (b *BookService) SetBookPublisher(
 		PublisherID: publisherID,
 		BookID:      bookID,
 	})
+}
+
+type BookAllData struct {
+	BookID    types.BookID
+	Title     string
+	Author    string
+	Status    types.Status
+	CoverHash string
+
+	PublisherName string
+	Collection    struct {
+		Name   string
+		Number uint
+	}
+	Series struct {
+		Name   string
+		Volume uint
+	}
+	Duplicates []BookDataWithCovers
+}
+
+func (b *BookService) GetAllDataForBook(
+	ctx context.Context, bookID types.BookID, accountID types.AccountID,
+) (BookAllData, error) {
+	var bookData BookAllData
+	log := zerolog.Ctx(ctx).With().Caller().Logger()
+	db := DB(ctx)
+	rowBookData, err := db.GetAllBookData(ctx, database.GetAllBookDataParams{
+		AccountID: accountID,
+		BookID:    bookID,
+	})
+
+	if err != nil {
+		log.Err(err).Msg("while trying to get all book data")
+		return BookAllData{}, err
+	}
+
+	bookData.BookID = rowBookData.BookID
+	bookData.Author = rowBookData.Author
+	bookData.Title = rowBookData.Title
+	if rowBookData.CoverHash.Valid {
+		bookData.CoverHash = rowBookData.CoverHash.String
+	} else {
+		bookData.CoverHash = ""
+	}
+
+	bookData.Status = rowBookData.Status
+
+	collectionRow, err := db.GetCollectionForBook(ctx, database.GetCollectionForBookParams{
+		AccountID: accountID,
+		BookID:    bookID,
+	})
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		log.Err(err).Msg("while trying to get collection for book")
+		return BookAllData{}, err
+	}
+
+	bookData.Collection.Name = collectionRow.Name
+	bookData.Collection.Number = uint(collectionRow.BookNumber.Int64)
+
+	seriesRow, err := db.GetSeriesForBook(ctx, database.GetSeriesForBookParams{
+		AccountID: accountID,
+		BookID:    bookID,
+	})
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		log.Err(err).Msg("while trying to get series for book")
+		return BookAllData{}, err
+	}
+
+	bookData.Series.Name = seriesRow.Name
+	bookData.Series.Volume = seriesRow.Volume
+
+	bookData.PublisherName, err = db.GetNameOfPublisher(ctx, database.GetNameOfPublisherParams{
+		AccountID:   accountID,
+		PublisherID: rowBookData.PublisherID,
+	})
+
+	if err != nil {
+		return BookAllData{}, err
+	}
+
+	if rowBookData.DuplicateID.Valid {
+		duplicates, err := db.GetDuplicatesForBook(ctx, database.GetDuplicatesForBookParams{
+			AccountID:   accountID,
+			DuplicateID: rowBookData.DuplicateID,
+			BookID:      bookID,
+		})
+		if err != nil {
+			log.Err(err).Msg("while trying to get duplicates for book")
+			return BookAllData{}, err
+		}
+
+		bookData.Duplicates = make([]BookDataWithCovers, 0, len(duplicates))
+		for _, dup := range duplicates {
+			var dupData BookDataWithCovers
+			dupData.Title = dup.Title
+			dupData.Author = dup.Author
+			dupData.BookID = dup.BookID
+			dupData.Status = dup.Status
+			if dup.CoverHash.Valid {
+				dupData.CoverHash = dup.CoverHash.String
+			}
+
+			bookData.Duplicates = append(bookData.Duplicates, dupData)
+		}
+	}
+
+	return bookData, nil
 }

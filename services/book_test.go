@@ -229,5 +229,22 @@ func TestSetBookCover(t *testing.T) {
 	if !bytes.Equal(samplePNG, data) {
 		t.Fatal("the sample file and the saved one differ")
 	}
+}
+
+func TestGetAllDataForBook(t *testing.T) {
+	t.Parallel()
+	ctx := Context(t)
+	bs := FixtureBookService(ctx, t)
+	bookID := FixtureBook(ctx, t)
+
+	bad, err := bs.GetAllDataForBook(ctx, bookID, FixtureAccount(ctx, t))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if bad.BookID != bookID {
+		t.Fatal("book id differs")
+	}
+
 
 }

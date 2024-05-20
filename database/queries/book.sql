@@ -23,3 +23,13 @@ UPDATE books SET cover_hash = @cover_hash WHERE book_id = @book_id;
 -- name: ChangePublisher :exec
 UPDATE books SET publisher_id = @publisher_id WHERE book_id = @book_id;
 
+-- name: GetAllBookData :one
+SELECT book_id, title, author, status, cover_hash, publisher_id, duplicate_id
+FROM books JOIN progresses ON books.progress_id = progresses.progress_id
+WHERE account_id = @account_id AND book_id = @book_id;
+
+-- name: GetDuplicatesForBook :many
+SELECT book_id, title, author, status, cover_hash
+FROM books JOIN progresses ON books.progress_id = progresses.progress_id
+WHERE account_id = @account_id AND duplicate_id = @duplicate_id AND book_id != @book_id;
+
