@@ -151,3 +151,58 @@ func (css *CollectionSeriesService) SetNumberInCollection(ctx context.Context, n
 		BookID: bookID,
 	})
 }
+
+type BookSeriesData struct {
+	SeriesID types.SeriesID
+	Name     string
+	Volume   uint
+}
+
+func (css *CollectionSeriesService) GetSeriesForBook(
+	ctx context.Context, bookID types.BookID, accountID types.AccountID,
+) (BookSeriesData, error) {
+	row, err := DB(ctx).GetSeriesForBook(ctx, database.GetSeriesForBookParams{
+		AccountID: accountID,
+		BookID:    bookID,
+	})
+	if err != nil {
+		return BookSeriesData{}, err
+	}
+
+	return BookSeriesData{
+		SeriesID: row.SeriesID,
+		Name:     row.Name,
+		Volume:   row.Volume,
+	}, nil
+}
+
+type BookCollectionData struct {
+	CollectionID types.CollectionID
+	Name         string
+	Number       uint
+}
+
+func (css *CollectionSeriesService) GetCollectionForBook(
+	ctx context.Context, bookID types.BookID, accountID types.AccountID,
+) (BookCollectionData, error) {
+	row, err := DB(ctx).GetCollectionForBook(ctx, database.GetCollectionForBookParams{
+		AccountID: accountID,
+		BookID:    bookID,
+	})
+	if err != nil {
+		return BookCollectionData{}, err
+	}
+
+	var number uint
+	if row.BookNumber.Valid {
+		number = uint(row.BookNumber.Int64)
+	} else {
+		number = 0
+	}
+
+	return BookCollectionData{
+		CollectionID: row.CollectionID,
+		Name:         row.Name,
+		Number:       number,
+	}, nil
+}
