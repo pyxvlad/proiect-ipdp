@@ -33,3 +33,10 @@ SELECT book_id, title, author, status, cover_hash
 FROM books JOIN progresses ON books.progress_id = progresses.progress_id
 WHERE account_id = @account_id AND duplicate_id = @duplicate_id AND book_id != @book_id;
 
+-- name: SetBookTitle :exec
+UPDATE books SET title = @title
+WHERE book_id = @book_id AND @account_id = @account_id;
+
+-- name: SetBookAuthor :exec
+UPDATE books SET author = @author
+WHERE book_id = @book_id AND @account_id = @account_id;
