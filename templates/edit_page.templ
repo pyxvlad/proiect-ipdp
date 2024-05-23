@@ -1,0 +1,102 @@
+package templates
+
+import "github.com/pyxvlad/proiect-ipdp/services"
+import "github.com/pyxvlad/proiect-ipdp/database/types"
+import "strconv"
+
+templ EditBookPage(bookData services.BookAllData) {
+	@PageWithoutOverlap("Edit book", true) {
+		<form
+			enctype="multipart/form-data"
+			method="post"
+			class="mb-5"
+			hx-on:load="htmx.find('form').reset()"
+		>
+			<div class="flex flex-col items-center space-y-2">
+				<label>Preview</label>
+				@BookCardPreview(BookCard{
+					Title:    bookData.Title,
+					Author:   bookData.Author,
+					ImageURL: "/books/covers/" + bookData.CoverHash,
+					Status:   bookData.Status,
+				})
+				<label for="coverupload" class="bg-[#18181A] border-solid focus:border-2 focus:outline-none focus:ring-0 focus:border-ctp-sky p-[2px] focus:p-0 rounded-md w-1/3 text-center">Upload Cover</label>
+				<input id="coverupload" hx-encoding="multipart/form-data" hx-post="/books/cards/preview" hx-target="#preview" hx-swap="outerHTML" class="hidden" type="file" name="cover" value="" placeholder={ bookData.Title }/>
+				<label>Title</label>
+				<input
+					autocomplete="off"
+					hx-encoding="multipart/form-data"
+					hx-post="/books/cards/preview"
+					hx-trigger="input changed delay:1s"
+					hx-target="#preview"
+					hx-swap="outerHTML"
+					class={ "bg-ctp-surface0 border-solid focus:border-2 focus:outline-none focus:ring-0 focus:border-ctp-sky p-[2px] focus:p-0 rounded-md",
+				StatusSelector() }
+					type="text"
+					name="title"
+					value=""
+					placeholder={ bookData.Title }
+				/>
+				<label>Author</label>
+				<input
+					autocomplete="off"
+					hx-encoding="multipart/form-data"
+					hx-post="/books/cards/preview"
+					hx-trigger="input changed delay:1s"
+					hx-target="#preview"
+					hx-swap="outerHTML"
+					class={ "bg-ctp-surface0 border-solid focus:border-2 focus:outline-none focus:ring-0 focus:border-ctp-sky p-[2px] focus:p-0 rounded-md",
+				 StatusSelector() }
+					type="text"
+					name="author"
+					value=""
+					placeholder={ bookData.Author }
+				/>
+				@InputWithSuggestions("publisher", "Publisher", bookData.PublisherName)
+				@WithNumericField("collection", false, strconv.FormatUint(uint64(bookData.Collection.Number), 10)) {
+					@InputWithSuggestions("collection", "Collection", bookData.Collection.Name)
+				}
+				@WithNumericField("series", true, strconv.FormatUint(uint64(bookData.Series.Volume), 10)) {
+					@InputWithSuggestions("series", "Series", bookData.Series.Name)
+				}
+				<label>Status</label>
+				<select
+					hx-encoding="multipart/form-data"
+					hx-post="/books/cards/preview"
+					hx-trigger="input changed delay:1s"
+					hx-target="#preview"
+					hx-swap="outerHTML"
+					name="status"
+					id="status"
+					autocomplete="off"
+					class={ "bg-ctp-surface0 border-solid focus:border-2 focus:outline-none focus:ring-0 focus:border-ctp-sky p-[2px] focus:p-0 rounded-md", 
+							StatusSelector() }
+				>
+					for _, status := range types.GetAllStatuses() {
+						<option value={ status.String() } selected?={ status == bookData.Status }>{ status.String() }</option>
+					}
+				</select>
+				<div class="flex flex-row-reverse place-content-center items-center">
+					<label>Duplicate</label>
+					<input
+						hx-on:click="document.querySelectorAll('#duplicate-drawer')[0].classList.toggle('hidden')"
+						type="checkbox"
+						name="has-duplicate"
+						id="has-duplicate"
+						autocomplete="off"
+					/>
+				</div>
+				// TODO(Vlad): implement duplicate unlinking park  
+				<div class="hidden w-full flex flex-col place-content-center place-items-center space-y-2" id="duplicate-drawer">
+					@InputWithSuggestions("duplicate", "Duplicate", "Duplicate book name")
+				</div>
+				<button
+					class={ "bg-[#18181A] border-solid focus:bg-ctp-crust p-[2px] rounded-full w-1/4 h-[3.278688525%]", }
+					type="submit"
+				>
+					Save
+				</button>
+			</div>
+		</form>
+	}
+}

@@ -10,19 +10,41 @@ templ Page(title string, showIcon bool) {
 	<html>
 		<head>
 			<meta charset="UTF-8"/>
-			<meta name="viewport" content="width=device-width, initial-scale=1"/>
-			<link href="css/style.css" rel="stylesheet"/>
-			<link href="css/checkbox.css" rel="stylesheet"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1"/>
+			<link href="/css/style.css" rel="stylesheet"/>
+			<link href="/css/checkbox.css" rel="stylesheet"/>
+			<link href="/css/font.css" rel="stylesheet"/>
 			<script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
 			<title>{ title }</title>
 		</head>
-		<body class="ctp-mocha bg-ctp-base">
+		<body
+			class={ "ctp-mocha bg-ctp-base text-ctp-text", "ubuntu-regular" }
+		>
 			// this will overlap with the page content
 			<div class="ctp-mocha bg-ctp-base w-screen px-7 py-4 fixed flex flex-row justify-between">
 				<p class="ctp-mocha text-ctp-text text-2xl">{ title }</p>
 				if showIcon {
-					<img class="w-[10%]" src="/assets/cat-svgrepo-com.svg" alt=""/>
+					<img
+						hx-on:click="htmx.removeClass(htmx.find('#hidden-menu'),'hidden')"
+						class="w-[10%]"
+						src="/assets/cat-svgrepo-com.svg"
+						alt=""
+					/>
 				}
+			</div>
+			<div id="hidden-menu" class="hidden fixed w-screen bg-ctp-base rounded-b-3xl">
+				<div class="ctp-mocha bg-ctp-base w-screen px-7 py-4 flex flex-row justify-between">
+					<p class="ctp-mocha text-ctp-text text-2xl">Menu</p>
+					if showIcon {
+						<img
+							hx-on:click="htmx.addClass(htmx.find('#hidden-menu'),'hidden')"
+							class="w-[10%]"
+							src="/assets/close-svgrepo-com.svg"
+							alt=""
+						/>
+					}
+				</div>
+				@Menu()
 			</div>
 			//
 			//<div class="h-16"></div>
@@ -41,6 +63,25 @@ templ PageWithoutOverlap(title string, showIcon bool) {
 		<div class="h-[4.5rem]"></div>
 		{ children... }
 	}
+}
+
+templ Menu() {
+	<div class="flex flex-col justify-start ml-2 gap-y-3 mb-4">
+		<div class="flex flex-col justify-start ml-5 mb-4 text-xl gap-y-4">
+			@MenuItems("Authors", "/assets/typewriter-svgrepo-com.svg")
+			@MenuItems("Publishers", "/assets/stamp-svgrepo-com.svg")
+			@MenuItems("Collections", "/assets/collections.svg")
+			@MenuItems("Series", "/assets/series.svg")
+		</div>
+		<div class="flex place-items-center place-content-center mr-2 ml-0">
+			<span class="bg-ctp-subtext0 w-11/12 h-px "></span>
+		</div>
+		<div class="flex flex-col justify-start mt-4 ml-5 text-xl gap-y-4">
+			@MenuItems("Settings", "/assets/settings-svgrepo-com(1).svg")
+			@MenuItems("Switch Account", "/assets/users-svgrepo-com.svg")
+			@MenuItemsExtended("Log Out", "/assets/logout-2-svgrepo-com.svg", true)
+		</div>
+	</div>
 }
 
 templ HelloPage() {
@@ -193,7 +234,7 @@ templ InputWithSuggestions(id string, label string, placeholder string) {
 			type="text"
 			name={ id }
 			value=""
-			placeholder={ placeholder + "..." }
+			placeholder={ placeholder }
 			autocomplete="off"
 		/>
 		<input type="hidden" name={ id + "_id" } id={ id + "-id" }/>
@@ -286,12 +327,12 @@ templ AddBookPage() {
 					value=""
 					placeholder="Author's name..."
 				/>
-				@InputWithSuggestions("publisher", "Publisher", "Publisher's name")
+				@InputWithSuggestions("publisher", "Publisher", "Publisher's name...")
 				@WithNumericField("collection", false, "Number in collecion...") {
-					@InputWithSuggestions("collection", "Collection", "Collection name")
+					@InputWithSuggestions("collection", "Collection", "Collection name...")
 				}
 				@WithNumericField("series", true, "Volume in series...") {
-					@InputWithSuggestions("series", "Series", "Series name")
+					@InputWithSuggestions("series", "Series", "Series name...")
 				}
 				<label>Status</label>
 				<select
@@ -351,7 +392,7 @@ templ MenuItems(text string, iconUrl string) {
 	@MenuItemsExtended(text, iconUrl, false)
 }
 
-templ Menu() {
+templ MenuPage() {
 	@PageWithoutOverlap("Menu", false) {
 		<div class="flex flex-col justify-start ml-2 gap-y-3">
 			<div class="flex flex-col justify-start ml-5 mb-4 text-xl gap-y-4">

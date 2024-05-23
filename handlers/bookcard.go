@@ -7,15 +7,17 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strings"
+	"strconv"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/pyxvlad/proiect-ipdp/database/types"
+	"github.com/pyxvlad/proiect-ipdp/services"
 	"github.com/pyxvlad/proiect-ipdp/templates"
 	"github.com/rs/zerolog"
 )
 
 // SampleBookCards generates 16 sample book cards, and then renders them to a page.
-func SampleBookCards(w http.ResponseWriter, r *http.Request) {
+/*func SampleBookCards(w http.ResponseWriter, r *http.Request) {
 	infos := make([]templates.BookCard, 0, 24)
 
 	for i := 0; i != 24; i++ {
@@ -34,6 +36,18 @@ func SampleBookCards(w http.ResponseWriter, r *http.Request) {
 		infos = append(infos, bc)
 	}
 
+	templates.BookCardsPage(infos).Render(context.TODO(), w)
+}*/
+
+func ViewLibrary(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	log := zerolog.Ctx(ctx)
+	bs := services.NewBookService(services.CoverPath(ctx))
+	infos, err := bs.ListBooksWithCoversForAccount(ctx, AccountID(ctx))
+	if err != nil {
+		log.Err(err).Msg("while trying to list books")
+		return
+	}
 	templates.BookCardsPage(infos).Render(context.TODO(), w)
 }
 
@@ -75,5 +89,31 @@ func PreviewCard(w http.ResponseWriter, r *http.Request) {
 	}).Render(r.Context(), w)
 	if err != nil {
 		log.Err(err).Msg("Trouble updating the preview")
+	}
+}
+
+func ViewDetails(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	log := zerolog.Ctx(ctx)
+
+	bookIDString := chi.URLParam(r, "bookID")
+	parsedID, err := strconv.ParseInt(bookIDString, 10, 64)
+	if err != nil {
+		parsedID = 0
+	}
+
+	bookID := types.BookID(parsedID)
+
+	bs := services.NewBookService(services.CoverPath(ctx))
+
+	bookData, err := bs.GetAllDataForBook(ctx, bookID, AccountID(ctx))
+	if err != nil {
+		log.Err(err).Msg("while getting book data")
+		return
+	}
+
+	err = templates.DetailsPage(bookData).Render(ctx, w)
+	if err != nil {
+		log.Err(err).Msg("while rendering details page")
 	}
 }
