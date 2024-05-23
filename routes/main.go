@@ -43,10 +43,14 @@ func NewAppRouter(log *zerolog.Logger, db *sql.DB, coverPath string) *chi.Mux {
 		r.Post("/attempt", handlers.LogInAttempt)
 	})
 
-	router.HandleFunc("/samples", handlers.SampleBookCards)
+	router.With(handlers.LoginMiddleware).Get("/books", handlers.ViewLibrary)
+
+	//router.HandleFunc("/samples", handlers.SampleBookCards)
 	router.With(handlers.LoginMiddleware).HandleFunc("/addbook", handlers.AddBookPage)
 	router.HandleFunc("/menu", handlers.Menu)
 	router.Post("/books/cards/preview", handlers.PreviewCard)
+	router.With(handlers.LoginMiddleware).Get("/books/{bookID}/details", handlers.ViewDetails)
+	router.With(handlers.LoginMiddleware).HandleFunc("/books/{bookID}/edit", handlers.EditBookPage)
 
 	router.Route("/suggestions", func(r chi.Router) {
 		r.Use(handlers.LoginMiddleware)
@@ -55,6 +59,9 @@ func NewAppRouter(log *zerolog.Logger, db *sql.DB, coverPath string) *chi.Mux {
 		r.Get("/series", handlers.SuggestSeries)
 		r.Get("/duplicate", handlers.SuggestDuplicates)
 	})
+
+	coverFs := http.FileServer(http.Dir(coverPath))
+	router.Handle("/books/covers/*", http.StripPrefix("/books/covers/", coverFs))
 
 	fs := http.FileServer(http.Dir("./assets/"))
 	router.Handle("/assets/*", http.StripPrefix("/assets/", fs))

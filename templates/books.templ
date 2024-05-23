@@ -2,6 +2,7 @@ package templates
 
 import "fmt"
 import "github.com/pyxvlad/proiect-ipdp/database/types"
+import "github.com/pyxvlad/proiect-ipdp/services"
 
 type BookCard struct {
 	Author   string
@@ -38,6 +39,10 @@ css Button() {
   background-position: center;
 */
 
+css shadow() {
+	box-shadow: 0 0 10px 0px #1f2937;
+}
+
 templ bookCardWrapper(info BookCard) {
 	<div
 		class={
@@ -55,15 +60,16 @@ templ bookCardWrapper(info BookCard) {
 		<div
 			class={
 				// "flex flex-row-reverse size-3 rounded-full",
-				"mr-3 mt-3 ml-auto rounded-full size-3",
+				"mr-3 mt-3 ml-auto rounded-full size-3 ",
 				StatusToColor(info.Status),
+				shadow(),
 			}
 		></div>
 	</div>
 }
 
 templ thebookGrid() {
-	<div class="grid grid-cols-3 lg:grid-cols-6 gap-y-2 place-content-evenly">
+	<div class="grid grid-cols-3 lg:grid-cols-6 gap-y-2 place-content-evenly w-screen">
 		{ children... }
 	</div>
 }
@@ -76,11 +82,18 @@ templ AddBookButton() {
 	</div>
 }
 
-templ BookCardsPage(info []BookCard) {
+templ BookCardsPage(info []services.BookDataWithCovers) {
 	@PageWithoutOverlap("Library", true) {
 		@thebookGrid() {
 			for _, nfo := range info {
-				@bookCardWrapper(nfo)
+				<a href={ templ.URL(fmt.Sprintf("/books/%d/details", nfo.BookID)) }>
+					@bookCardWrapper(BookCard{
+						Author:   nfo.Author,
+						Title:    nfo.Title,
+						ImageURL: "/books/covers/" + nfo.CoverHash,
+						Status:   nfo.Status,
+					})
+				</a>
 			}
 		}
 		@AddBookButton()

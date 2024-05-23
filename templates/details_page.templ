@@ -1,0 +1,96 @@
+package templates
+
+import "github.com/pyxvlad/proiect-ipdp/services"
+import "fmt"
+
+templ DetailsPage(bookData services.BookAllData) {
+	@PageWithoutOverlap("Book Details", true) {
+		<div class="flex flex-col justify-start space-y-6 ">
+			<div class=" flex flex-row h-auto">
+				<div class="w-1/2">
+					@bookCardWrapper(BookCard{
+						Title:    bookData.Title,
+						Author:   bookData.Author,
+						ImageURL: "/books/covers/" + bookData.CoverHash,
+						Status:   bookData.Status,
+					})
+				</div>
+				<div class="flex flex-col justify-between items-center w-1/2">
+					<div class="flex flex-col items-center place-content-center">
+						<p>Title</p>
+						<p class="italic text-center">{ bookData.Title }</p>
+					</div>
+					<div class="flex flex-col items-center place-content-center">
+						<p>Author</p>
+						<p class="italic text-center">{ bookData.Author }</p>
+					</div>
+					<div class="flex flex-col items-center place-content-center">
+						<p>Status</p>
+						<p class="italic text-center">{ bookData.Status.String() }</p>
+					</div>
+					<div class="flex flex-col items-center place-content-center">
+						<p>Publisher</p>
+						<p class="italic text-center">{ bookData.PublisherName }</p>
+					</div>
+				</div>
+			</div>
+			<div class="flex flex-row h-auto">
+				<div class="flex flex-col space-y-6 items-center place-content-center w-1/2">
+					<div class="flex flex-col items-center place-content-center">
+						<p>Collection</p>
+						if bookData.Collection.Name != "" {
+							<p class="italic text-center">{ bookData.Collection.Name }</p>
+						} else {
+							<p class="italic text-center">N/A</p>
+						}
+					</div>
+				</div>
+				<div class="flex flex-col items-center place-content-center space-y-6 w-1/2">
+					<div class="flex flex-col items-center place-content-center">
+						<p>Series</p>
+						if bookData.Series.Name != "" {
+							<p class="italic text-center">{ bookData.Series.Name }</p>
+						} else {
+							<p class="italic text-center">N/A</p>
+						}
+					</div>
+				</div>
+			</div>
+			<div class="flex flex-col h-auto">
+				<div class="flex flex-col items-center place-content-center">
+					<p>Duplicates</p>
+					if len(bookData.Duplicates) !=0 {
+						@thebookGrid() {
+							for _, nfo := range bookData.Duplicates {
+								<a href={ templ.URL(fmt.Sprintf("/books/%d/details", nfo.BookID)) }>
+									@bookCardWrapper(BookCard{
+										Author:   nfo.Author,
+										Title:    nfo.Title,
+										ImageURL: "/books/covers/" + nfo.CoverHash,
+										Status:   nfo.Status,
+									})
+								</a>
+							}
+						}
+						/// C
+					} else {
+						<p class="italic text-center">N/A</p>
+					}
+				</div>
+			</div>
+			if len(bookData.Duplicates) == 0 {
+				<div class="flex flex-col place-content-center items-center">
+					<img class="w-10/12 aspect-[30/16]" src="/assets/cat-travel-bag-svgrepo-com.svg" alt=""/>
+				</div>
+			}
+			<div class="flex flex-row h-auto items-baseline mb-4 pb-4">
+				<div class="flex flex-col justify-between items-center w-1/2">
+					<div class="p-[12px] text-center rounded-full bg-ctp-text text-ctp-base w-[113.217px]">Edit book</div>
+				</div>
+				<div class="flex flex-col justify-between items-center w-1/2">
+					<div class="p-[12px] rounded-full bg-ctp-red text-ctp-base">Delete book</div>
+				</div>
+			</div>
+		</div>
+	}
+}
