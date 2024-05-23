@@ -359,3 +359,29 @@ func (b *BookService) GetAllDataForBook(
 
 	return bookData, nil
 }
+
+func (bs *BookService) SetBookTitle(
+	ctx context.Context,
+	account_id types.AccountID,
+	book_id types.BookID,
+	title string,
+) error {
+	return DB(ctx).SetBookTitle(ctx, database.SetBookTitleParams{
+		Title: title,
+		BookID: book_id,
+		AccountID: account_id,
+	})
+}
+
+func (bs *BookService) SetBookAuthor(
+	ctx context.Context,
+	account_id types.AccountID,
+	book_id types.BookID,
+	author string,
+) error {
+	return DB(ctx).SetBookAuthor(ctx, database.SetBookAuthorParams{
+		Author: author,
+		BookID: book_id,
+		AccountID: account_id,
+	})
+}

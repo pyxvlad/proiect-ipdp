@@ -118,3 +118,36 @@ func (css *CollectionSeriesService) ListCollectionsForAccount(ctx context.Contex
 	}
 	return data, nil
 }
+
+func (css *CollectionSeriesService) RenameSeries(ctx context.Context, accountID types.AccountID, seriesID types.SeriesID, name string) error {
+	return DB(ctx).RenameSeries(ctx, database.RenameSeriesParams{
+		Name:      name,
+		SeriesID:  seriesID,
+		AccountID: accountID,
+	})
+}
+
+func (css *CollectionSeriesService) RenameCollection(ctx context.Context, accountID types.AccountID, collectionID types.CollectionID, name string) error {
+	return DB(ctx).RenameCollection(ctx, database.RenameCollectionParams{
+		Name:         name,
+		CollectionID: collectionID,
+		AccountID:    accountID,
+	})
+}
+
+func (css *CollectionSeriesService) SetVolumeInSeries(ctx context.Context, volume uint, bookID types.BookID) error {
+	return DB(ctx).ChangeBookVolumeInSeries(ctx, database.ChangeBookVolumeInSeriesParams{
+		Volume: volume,
+		BookID: bookID,
+	})
+}
+
+func (css *CollectionSeriesService) SetNumberInCollection(ctx context.Context, number uint, bookID types.BookID) error {
+	return DB(ctx).ChangeBookNumberInCollection(ctx, database.ChangeBookNumberInCollectionParams{
+		BookNumber: sql.NullInt64{
+			Int64: int64(number),
+			Valid: number != 0,
+		},
+		BookID: bookID,
+	})
+}

@@ -28,6 +28,14 @@ SELECT series_id, name FROM series WHERE account_id = @accoount_id;
 -- name: ListCollectionsForAccount :many
 SELECT collection_id, name FROM collections WHERE account_id = @accoount_id;
 
+-- name: RenameSeries :exec
+UPDATE series SET name = @name
+WHERE series_id = @series_id AND account_id = @account_id;
+
+-- name: RenameCollection :exec
+UPDATE collections SET name = @name
+WHERE collection_id = @collection_id AND account_id = @account_id;
+
 -- name: GetSeriesForBook :one
 SELECT name, volume
 FROM book_series JOIN series
@@ -39,3 +47,13 @@ SELECT name, book_number
 FROM book_collections JOIN collections
 ON book_collections.collection_id = collections.collection_id
 WHERE account_id = @account_id AND book_id = @book_id;
+
+-- name: ChangeBookVolumeInSeries :exec
+UPDATE book_series
+SET volume = @volume
+WHERE book_id = @book_id;
+
+-- name: ChangeBookNumberInCollection :exec
+UPDATE book_collections
+SET book_number = @book_number
+WHERE book_id = @book_id;
