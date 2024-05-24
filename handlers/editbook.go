@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -44,9 +45,9 @@ func EditBookPage(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	// title := r.FormValue("title")
-	// author := r.FormValue("author")
-	// statusRaw := r.FormValue("status")
+	title := r.FormValue("title")
+	author := r.FormValue("author")
+	statusRaw := r.FormValue("status")
 
 	file, header, coverErr := r.FormFile("cover")
 	publisher := r.FormValue("publisher")
@@ -60,6 +61,24 @@ func EditBookPage(w http.ResponseWriter, r *http.Request) {
 	// TODO: use header
 	_ = header
 
+	err = bs.SetBookTitle(ctx, AccountID(ctx), bookID, title)
+	if err != nil {
+		log.Err(err).Msg("while trying to set book title")
+		return
+	}
+
+	err = bs.SetBookAuthor(ctx, AccountID(ctx), bookID, author)
+	if err != nil {
+		log.Err(err).Msg("while trying to set author name")
+		return
+	}
+
+	err = bs.SetBookStatus(ctx, bookID, types.Status(statusRaw))
+	if err != nil {
+		log.Err(err).Msg("while trying to set book status")
+		return
+	}
+
 	css := services.NewCollectionSeriesService()
 	ps := services.NewPublisherService()
 	if publisherID == types.InvalidPublisherID && publisher != "" {
@@ -71,6 +90,12 @@ func EditBookPage(w http.ResponseWriter, r *http.Request) {
 	} else if publisherID == types.InvalidPublisherID && publisher == "" {
 		log.Error().Msg("while ceva")
 		// TODO: show it to the user
+		return
+	}
+
+	err = bs.SetBookPublisher(ctx, bookID, publisherID)
+	if err != nil {
+		log.Err(err).Msg("while trying to set publisher")
 		return
 	}
 
@@ -88,6 +113,18 @@ func EditBookPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	collectionNumber := IDFromForm[int64](r, "collection-numeric")
+
+	collectionData, err := css.GetCollectionForBook(ctx, bookID, AccountID(ctx))
+	if err != nil {
+		log.Err(err).Msg("while getting collection ID")
+	}
+	if collectionID == collectionData.CollectionID {
+		err := css.RemoveBookFromCollection(ctx, bookID, collectionID)
+		if err != nil {
+			log.Err(err).Msg("while trying to remove book from collection")
+			return
+		}
+	}
 
 	if collectionID != types.InvalidCollectionID {
 		err = css.AddBookToCollection(ctx, bookID, collectionID, uint(collectionNumber))
@@ -109,6 +146,18 @@ func EditBookPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	seriesNumber := IDFromForm[int64](r, "series-numeric")
+
+	seriesData, err := css.GetSeriesForBook(ctx, bookID, AccountID(ctx))
+	if err != nil {
+		log.Err(err).Msg("while getting series ID")
+	}
+	if seriesID == seriesData.SeriesID {
+		err := css.RemoveBookFromSeries(ctx, bookID, seriesID)
+		if err != nil {
+			log.Err(err).Msg("while trying to remove book from series")
+			return
+		}
+	}
 
 	if seriesID != types.InvalidSeriesID {
 		err = css.AddBookToSeries(ctx, bookID, seriesID, uint(seriesNumber))
@@ -136,5 +185,7 @@ func EditBookPage(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	w.Header().Add("Location", fmt.Sprintf("/books/%d/details", bookID))
+	w.WriteHeader(http.StatusSeeOther)
 
 }

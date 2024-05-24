@@ -1,12 +1,14 @@
 package handlers
 
 import (
+	"cmp"
 	"context"
 	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"slices"
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
@@ -48,6 +50,11 @@ func ViewLibrary(w http.ResponseWriter, r *http.Request) {
 		log.Err(err).Msg("while trying to list books")
 		return
 	}
+
+	slices.SortFunc(infos, func(a services.BookDataWithCovers, b services.BookDataWithCovers) int {
+		return cmp.Compare(a.Title, b.Title)
+	})
+
 	templates.BookCardsPage(infos).Render(context.TODO(), w)
 }
 

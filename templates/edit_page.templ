@@ -5,7 +5,7 @@ import "github.com/pyxvlad/proiect-ipdp/database/types"
 import "strconv"
 
 templ EditBookPage(bookData services.BookAllData) {
-	@PageWithoutOverlap("Edit book", true) {
+	@PageWithoutOverlap("Edit book", true, false) {
 		<form
 			enctype="multipart/form-data"
 			method="post"

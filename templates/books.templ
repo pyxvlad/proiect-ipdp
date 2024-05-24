@@ -50,10 +50,10 @@ templ bookCardWrapper(info BookCard) {
 			"flex-col-reverse justify-between aspect-[10/16] w-11/12 rounded-xl shadow-black bg-zinc-900 m-auto",
 			"bg-center",
 			"bg-no-repeat",
-			templ.KV(backgroundImg(info.ImageURL), info.ImageURL != ""),
-			templ.KV("bg-cover", info.ImageURL != ""),
-			templ.KV(backgroundImg("/assets/thenounproject-white.png"), info.ImageURL == ""),
-			templ.KV("bg-contain", info.ImageURL == ""),
+			templ.KV(backgroundImg(info.ImageURL), info.ImageURL != "" && info.ImageURL != "/books/covers/"),
+			templ.KV("bg-cover", info.ImageURL != "" && info.ImageURL != "/books/covers/"),
+			templ.KV(backgroundImg("/assets/thenounproject-white.png"), info.ImageURL == "" || info.ImageURL == "/books/covers/"),
+			templ.KV("bg-contain", info.ImageURL == "" || info.ImageURL == "/books/covers/"),
 		}
 	>
 		@bookCard(info)
@@ -83,7 +83,7 @@ templ AddBookButton() {
 }
 
 templ BookCardsPage(info []services.BookDataWithCovers) {
-	@PageWithoutOverlap("Library", true) {
+	@PageWithoutOverlap("Library", true, false) {
 		@thebookGrid() {
 			for _, nfo := range info {
 				<a href={ templ.URL(fmt.Sprintf("/books/%d/details", nfo.BookID)) }>

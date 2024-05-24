@@ -63,6 +63,11 @@ func NewAppRouter(log *zerolog.Logger, db *sql.DB, coverPath string) *chi.Mux {
 	coverFs := http.FileServer(http.Dir(coverPath))
 	router.Handle("/books/covers/*", http.StripPrefix("/books/covers/", coverFs))
 
+	router.With(handlers.LoginMiddleware).Get("/publishers", handlers.PublishersPage)
+	router.With(handlers.LoginMiddleware).Get("/series", handlers.SeriesPage)
+	router.With(handlers.LoginMiddleware).Get("/collections", handlers.CollectionsPage)
+	router.With(handlers.LoginMiddleware).Get("/authors", handlers.AuthorsPage)
+
 	fs := http.FileServer(http.Dir("./assets/"))
 	router.Handle("/assets/*", http.StripPrefix("/assets/", fs))
 

@@ -4,7 +4,7 @@ import "github.com/pyxvlad/proiect-ipdp/services"
 import "fmt"
 
 templ DetailsPage(bookData services.BookAllData) {
-	@PageWithoutOverlap("Book Details", true) {
+	@PageWithoutOverlap("Book Details", true, false) {
 		<div class="flex flex-col justify-start space-y-6 ">
 			<div class=" flex flex-row h-auto">
 				<div class="w-1/2">
@@ -85,7 +85,9 @@ templ DetailsPage(bookData services.BookAllData) {
 			}
 			<div class="flex flex-row h-auto items-baseline mb-4 pb-4">
 				<div class="flex flex-col justify-between items-center w-1/2">
-					<div class="p-[12px] text-center rounded-full bg-ctp-text text-ctp-base w-[113.217px]">Edit book</div>
+					<a href={ templ.URL(fmt.Sprintf("/books/%d/edit", bookData.BookID)) }>
+						<div class="p-[12px] text-center rounded-full bg-ctp-text text-ctp-base w-[113.217px]">Edit book</div>
+					</a>
 				</div>
 				<div class="flex flex-col justify-between items-center w-1/2">
 					<div class="p-[12px] rounded-full bg-ctp-red text-ctp-base">Delete book</div>

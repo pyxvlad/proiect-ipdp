@@ -1,11 +1,12 @@
 package templates
 
 import "github.com/pyxvlad/proiect-ipdp/database/types"
+import "github.com/pyxvlad/proiect-ipdp/services"
 
 // Page represents the page template.
 //
 // NOTE: the header will overlap with the page's content
-templ Page(title string, showIcon bool) {
+templ Page(title string, showIcon bool, showSSF bool) {
 	<!DOCTYPE html>
 	<html>
 		<head>
@@ -21,16 +22,23 @@ templ Page(title string, showIcon bool) {
 			class={ "ctp-mocha bg-ctp-base text-ctp-text", "ubuntu-regular" }
 		>
 			// this will overlap with the page content
-			<div class="ctp-mocha bg-ctp-base w-screen px-7 py-4 fixed flex flex-row justify-between">
-				<p class="ctp-mocha text-ctp-text text-2xl">{ title }</p>
-				if showIcon {
-					<img
-						hx-on:click="htmx.removeClass(htmx.find('#hidden-menu'),'hidden')"
-						class="w-[10%]"
-						src="/assets/cat-svgrepo-com.svg"
-						alt=""
-					/>
-				}
+			<div class="ctp-mocha bg-ctp-base w-screen px-7 py-4 fixed flex flex-row flex-grow justify-between max-h-16">
+				<p class="ctp-mocha text-ctp-text text-2xl w-1/2">{ title }</p>
+				<div class="flex flex-row justify-end space-x-4 items-center w-1/2">
+					if showIcon {
+						if showSSF {
+							<img class="h-[85%] aspect-square" src="/assets/search-svgrepo-com.svg" alt=""/>
+							<img class="h-full aspect-square" src="/assets/sort-svgrepo-com.svg" alt=""/>
+							<img class="h-[80%] aspect-square" src="/assets/filter-svgrepo-com.svg" alt=""/>
+						}
+						<img
+							hx-on:click="htmx.removeClass(htmx.find('#hidden-menu'),'hidden')"
+							class="h-full aspect-square"
+							src="/assets/cat-svgrepo-com.svg"
+							alt=""
+						/>
+					}
+				</div>
 			</div>
 			<div id="hidden-menu" class="hidden fixed w-screen bg-ctp-base rounded-b-3xl">
 				<div class="ctp-mocha bg-ctp-base w-screen px-7 py-4 flex flex-row justify-between">
@@ -58,20 +66,33 @@ templ Page(title string, showIcon bool) {
 	</html>
 }
 
-templ PageWithoutOverlap(title string, showIcon bool) {
-	@Page(title, showIcon) {
+templ PageWithoutOverlap(title string, showIcon bool, showSSF bool) {
+	@Page(title, showIcon, showSSF) {
 		<div class="h-[4.5rem]"></div>
 		{ children... }
 	}
 }
 
+script Logout() {
+	document.cookie = 'token=; Max-Age=0; path=/; domain=' + location.hostname;
+	window.location = "/login"
+}
+
 templ Menu() {
 	<div class="flex flex-col justify-start ml-2 gap-y-3 mb-4">
 		<div class="flex flex-col justify-start ml-5 mb-4 text-xl gap-y-4">
-			@MenuItems("Authors", "/assets/typewriter-svgrepo-com.svg")
-			@MenuItems("Publishers", "/assets/stamp-svgrepo-com.svg")
-			@MenuItems("Collections", "/assets/collections.svg")
-			@MenuItems("Series", "/assets/series.svg")
+			<a href="/authors">
+				@MenuItems("Authors", "/assets/typewriter-svgrepo-com.svg")
+			</a>
+			<a href="/publishers">
+				@MenuItems("Publishers", "/assets/stamp-svgrepo-com.svg")
+			</a>
+			<a href="/collections">
+				@MenuItems("Collections", "/assets/collections.svg")
+			</a>
+			<a href="/series">
+				@MenuItems("Series", "/assets/series.svg")
+			</a>
 		</div>
 		<div class="flex place-items-center place-content-center mr-2 ml-0">
 			<span class="bg-ctp-subtext0 w-11/12 h-px "></span>
@@ -79,13 +100,15 @@ templ Menu() {
 		<div class="flex flex-col justify-start mt-4 ml-5 text-xl gap-y-4">
 			@MenuItems("Settings", "/assets/settings-svgrepo-com(1).svg")
 			@MenuItems("Switch Account", "/assets/users-svgrepo-com.svg")
-			@MenuItemsExtended("Log Out", "/assets/logout-2-svgrepo-com.svg", true)
+			<div hx-on:click={ Logout() }>
+				@MenuItemsExtended("Log Out", "/assets/logout-2-svgrepo-com.svg", true)
+			</div>
 		</div>
 	</div>
 }
 
 templ HelloPage() {
-	@Page("Hello Page", true) {
+	@Page("Hello Page", true, false) {
 		<p class="ctp-mocha text-ctp-text">placeholder</p>
 		<div class="min-h-96">
 			for i :=0; i!= 100; i++ {
@@ -96,7 +119,7 @@ templ HelloPage() {
 }
 
 templ SignUpPage() {
-	@Page("Sign Up", false) {
+	@Page("Sign Up", false, false) {
 		<div class="flex flex-col justify-center items-center h-screen">
 			@SignUpForm("")
 		</div>
@@ -129,7 +152,7 @@ templ SignUpForm(warning string) {
 }
 
 templ LogInPage() {
-	@Page("Log In", false) {
+	@Page("Log In", false, false) {
 		<div class="flex flex-col justify-center items-center h-screen">
 			@LogInForm("")
 		</div>
@@ -280,7 +303,7 @@ templ Suggestion(id string, realId uint, name string) {
 }
 
 templ AddBookPage() {
-	@PageWithoutOverlap("Add book", true) {
+	@PageWithoutOverlap("Add book", true, false) {
 		<form
 			enctype="multipart/form-data"
 			method="post"
@@ -393,7 +416,7 @@ templ MenuItems(text string, iconUrl string) {
 }
 
 templ MenuPage() {
-	@PageWithoutOverlap("Menu", false) {
+	@PageWithoutOverlap("Menu", false, false) {
 		<div class="flex flex-col justify-start ml-2 gap-y-3">
 			<div class="flex flex-col justify-start ml-5 mb-4 text-xl gap-y-4">
 				@MenuItems("Authors", "/assets/typewriter-svgrepo-com.svg")
@@ -409,6 +432,54 @@ templ MenuPage() {
 				@MenuItems("Switch Account", "/assets/users-svgrepo-com.svg")
 				@MenuItemsExtended("Log Out", "/assets/logout-2-svgrepo-com.svg", true)
 			</div>
+		</div>
+	}
+}
+
+templ PublishersPage(publishers []services.PublisherData) {
+	@PageWithoutOverlap("Publishers", true, false) {
+		<div class="flex flex-col justify-start gap-y-3 mx-4">
+			for _, pub := range publishers {
+				<div class="flex flex-row justify-between">
+					<p>{ pub.Name }</p>
+				</div>
+			}
+		</div>
+	}
+}
+
+templ SeriesPage(series []services.SeriesData) {
+	@PageWithoutOverlap("Series", true, false) {
+		<div class="flex flex-col justify-start gap-y-3 mx-4">
+			for _, ser := range series {
+				<div class="flex flex-row justify-between">
+					<p>{ ser.Name }</p>
+				</div>
+			}
+		</div>
+	}
+}
+
+templ CollectionsPage(collections []services.CollectionData) {
+	@PageWithoutOverlap("Collections", true, false) {
+		<div class="flex flex-col justify-start gap-y-3 mx-4">
+			for _, col := range collections {
+				<div class="flex flex-row justify-between">
+					<p>{ col.Name }</p>
+				</div>
+			}
+		</div>
+	}
+}
+
+templ AuthorsPage(authors []string) {
+	@PageWithoutOverlap("Authors", true, false) {
+		<div class="flex flex-col justify-start gap-y-3 mx-4">
+			for _, author := range authors {
+				<div class="flex flex-row justify-between">
+					<p>{ author }</p>
+				</div>
+			}
 		</div>
 	}
 }

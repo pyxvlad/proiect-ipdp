@@ -1,9 +1,11 @@
 package handlers
 
 import (
+	"cmp"
 	"errors"
 	"net/http"
 	"net/mail"
+	"slices"
 	"strconv"
 
 	"github.com/pyxvlad/proiect-ipdp/database/types"
@@ -68,7 +70,7 @@ func SignUpAttempt(w http.ResponseWriter, r *http.Request) {
 		Password: password,
 	})
 
-	w.Header().Add("HX-Location", "/hello")
+	w.Header().Add("HX-Location", "/books")
 
 	w.WriteHeader(http.StatusCreated)
 }
@@ -107,7 +109,7 @@ func LogInAttempt(w http.ResponseWriter, r *http.Request) {
 		Path:   "/",
 	}
 	http.SetCookie(w, &cookie)
-	w.Header().Set("HX-Redirect", "/hello")
+	w.Header().Set("HX-Redirect", "/books")
 	_ = log
 }
 
@@ -238,11 +240,110 @@ func AddBookPage(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-
 }
 
 func Menu(w http.ResponseWriter, r *http.Request) {
 	log := zerolog.Ctx(r.Context())
 	err := templates.Menu().Render(r.Context(), w)
 	log.Err(err).Send()
+}
+
+func PublishersPage(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	log := zerolog.Ctx(ctx)
+
+	ps := services.NewPublisherService()
+	publishers, err := ps.ListPublishers(ctx, AccountID(ctx))
+	if err != nil {
+		log.Err(err).Msg("while trying to list publishers")
+		return
+	}
+
+	slices.SortFunc(publishers, func(a services.PublisherData, b services.PublisherData) int {
+		return cmp.Compare(a.Name, b.Name)
+	})
+
+	err = templates.PublishersPage(publishers).Render(ctx, w)
+	if err != nil {
+		log.Err(err).Msg("while trying to render publishers page")
+		return
+	}
+}
+func SeriesPage(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	log := zerolog.Ctx(ctx)
+
+	css := services.NewCollectionSeriesService()
+	series, err := css.ListSeriesForAccount(ctx, AccountID(ctx))
+	if err != nil {
+		log.Err(err).Msg("while trying to list series")
+		return
+	}
+
+	slices.SortFunc(series, func(a, b services.SeriesData) int {
+		return cmp.Compare(a.Name, b.Name)
+	})
+
+	err = templates.SeriesPage(series).Render(ctx, w)
+	if err != nil {
+		log.Err(err).Msg("while trying to render series page")
+		return
+	}
+}
+
+func CollectionsPage(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	log := zerolog.Ctx(ctx)
+
+	css := services.NewCollectionSeriesService()
+	collections, err := css.ListCollectionsForAccount(ctx, AccountID(ctx))
+	if err != nil {
+		log.Err(err).Msg("while trying to list collections")
+		return
+	}
+
+	slices.SortFunc(collections, func(a, b services.CollectionData) int {
+		return cmp.Compare(a.Name, b.Name)
+	})
+
+	err = templates.CollectionsPage(collections).Render(ctx, w)
+	if err != nil {
+		log.Err(err).Msg("while trying to render collections page")
+		return
+	}
+}
+
+func AuthorsPage(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	log := zerolog.Ctx(ctx)
+
+	bs := services.NewBookService(services.CoverPath(ctx))
+
+	bookData, err := bs.ListBooksForAccount(ctx, AccountID(ctx))
+
+	if err != nil {
+		log.Err(err).Msg("while listing book data for authors page")
+		return
+	}
+
+	authorsMap := make(map[string]bool)
+
+	for _, book := range bookData {
+		authorsMap[book.Author] = true
+	}
+
+	authors := make([]string, 0, len(authorsMap))
+
+	for author := range authorsMap {
+		authors = append(authors, author)
+	}
+
+	slices.Sort(authors)
+
+	err = templates.AuthorsPage(authors).Render(ctx, w)
+
+	if err != nil {
+		log.Err(err).Msg("while rendering authors page")
+		return
+	}
 }
