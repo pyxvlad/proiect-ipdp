@@ -1,6 +1,7 @@
 package services
 
 import (
+	"cmp"
 	"context"
 	"crypto/sha256"
 	"database/sql"
@@ -9,6 +10,7 @@ import (
 	"io"
 	"os"
 	"path"
+	"slices"
 
 	"github.com/pyxvlad/proiect-ipdp/database"
 	"github.com/pyxvlad/proiect-ipdp/database/types"
@@ -367,8 +369,8 @@ func (bs *BookService) SetBookTitle(
 	title string,
 ) error {
 	return DB(ctx).SetBookTitle(ctx, database.SetBookTitleParams{
-		Title: title,
-		BookID: book_id,
+		Title:     title,
+		BookID:    book_id,
 		AccountID: account_id,
 	})
 }
@@ -380,8 +382,129 @@ func (bs *BookService) SetBookAuthor(
 	author string,
 ) error {
 	return DB(ctx).SetBookAuthor(ctx, database.SetBookAuthorParams{
-		Author: author,
-		BookID: book_id,
+		Author:    author,
+		BookID:    book_id,
 		AccountID: account_id,
 	})
+}
+
+type SortFunc func(BookDataWithCovers, BookDataWithCovers) int
+
+func SortByTitle(x, y BookDataWithCovers) int {
+	return cmp.Compare(x.Title, y.Title)
+}
+
+func SortByAuthor(x, y BookDataWithCovers) int {
+	return cmp.Compare(x.Author, y.Author)
+}
+
+func SortByStatus(x, y BookDataWithCovers) int {
+	return cmp.Compare(x.Status, y.Status)
+}
+
+func (bs *BookService) ListBooksSorted(ctx context.Context, accountID types.AccountID, criteria SortFunc) ([]BookDataWithCovers, error) {
+	books, err := bs.ListBooksWithCoversForAccount(ctx, accountID)
+	if err != nil {
+		return nil, err
+	}
+
+	slices.SortFunc(books, criteria)
+	return books, nil
+}
+
+func (bs *BookService) FilterByAuthor(ctx context.Context, accountID types.AccountID, author string) ([]BookDataWithCovers, error) {
+	rows, err := DB(ctx).GetBooksForAuthor(ctx, author)
+	if err != nil {
+		return nil, err
+	}
+
+	data := make([]BookDataWithCovers, 0, len(rows))
+	for _, row := range rows {
+		var bd BookDataWithCovers
+		bd.Title = row.Title
+		bd.Author = row.Author
+		bd.Status = row.Status
+		bd.BookID = row.BookID
+		if row.CoverHash.Valid {
+			bd.CoverHash = row.CoverHash.String
+		} else {
+			bd.CoverHash = ""
+		}
+		data = append(data, bd)
+	}
+
+	return data, nil
+}
+
+func (bs *BookService) FilterByPublisher(ctx context.Context, accountID types.AccountID, publisherID types.PublisherID) ([]BookDataWithCovers, error) {
+	rows, err := DB(ctx).GetBooksForPublisher(ctx, publisherID)
+	if err != nil {
+		return nil, err
+	}
+
+	data := make([]BookDataWithCovers, 0, len(rows))
+	for _, row := range rows {
+		var bd BookDataWithCovers
+		bd.Title = row.Title
+		bd.Author = row.Author
+		bd.Status = row.Status
+		bd.BookID = row.BookID
+		if row.CoverHash.Valid {
+			bd.CoverHash = row.CoverHash.String
+		} else {
+			bd.CoverHash = ""
+		}
+		data = append(data, bd)
+	}
+
+	return data, nil
+}
+
+func (bs *BookService) FilterBySeries(ctx context.Context, accountID types.AccountID, seriesID types.SeriesID) ([]BookDataWithCovers, error) {
+	rows, err := DB(ctx).GetBooksForSeries(ctx, seriesID)
+	if err != nil {
+		return nil, err
+	}
+
+	data := make([]BookDataWithCovers, 0, len(rows))
+	for _, row := range rows {
+		var bd BookDataWithCovers
+		bd.Title = row.Title
+		bd.Author = row.Author
+		bd.Status = row.Status
+		bd.BookID = row.BookID
+		if row.CoverHash.Valid {
+			bd.CoverHash = row.CoverHash.String
+		} else {
+			bd.CoverHash = ""
+		}
+		data = append(data, bd)
+	}
+
+	return data, nil
+}
+
+
+func (bs *BookService) FilterByCollection(ctx context.Context, accountID types.AccountID, collectionID types.CollectionID) ([]BookDataWithCovers, error) {
+	rows, err := DB(ctx).GetBooksForCollection(ctx, collectionID)
+	if err != nil {
+		return nil, err
+	}
+
+	data := make([]BookDataWithCovers, 0, len(rows))
+	for _, row := range rows {
+		var bd BookDataWithCovers
+		bd.Title = row.Title
+		bd.Author = row.Author
+		bd.Status = row.Status
+		bd.BookID = row.BookID
+		if row.CoverHash.Valid {
+			bd.CoverHash = row.CoverHash.String
+		} else {
+			bd.CoverHash = ""
+		}
+		data = append(data, bd)
+	}
+
+	return data, nil
 }
