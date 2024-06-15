@@ -40,3 +40,8 @@ WHERE book_id = @book_id AND @account_id = @account_id;
 -- name: SetBookAuthor :exec
 UPDATE books SET author = @author
 WHERE book_id = @book_id AND @account_id = @account_id;
+
+-- name: GetBooksForPublishers :exec
+SELECT book_id, title, author, status, cover_hash
+FROM books JOIN progresses ON books.progress_id = progresses.progress_id
+WHERE publisher_id IN (sqlc.slice('publisher_ids'));
