@@ -18,4 +18,3 @@ WHERE account_id = @account_id AND publisher_id = @publisher_id;
 UPDATE publishers SET name = @name
 WHERE publisher_id = @publisher_id AND account_id = @account_id;
 
-

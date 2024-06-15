@@ -206,3 +206,18 @@ func (css *CollectionSeriesService) GetCollectionForBook(
 		Number:       number,
 	}, nil
 }
+
+func (css *CollectionSeriesService) GetNameOfSeries(ctx context.Context, accountID types.AccountID, seriesID types.SeriesID) (string, error) {
+	return DB(ctx).GetNameOfSeries(ctx, database.GetNameOfSeriesParams{
+		SeriesID: seriesID,
+		AccountID: accountID,
+	})
+}
+
+
+func (css *CollectionSeriesService) GetNameOfCollection(ctx context.Context, accountID types.AccountID, collectionID types.CollectionID) (string, error) {
+	return DB(ctx).GetNameOfCollection(ctx, database.GetNameOfCollectionParams{
+		CollectionID: collectionID,
+		AccountID: accountID,
+	})
+}

@@ -36,6 +36,16 @@ WHERE series_id = @series_id AND account_id = @account_id;
 UPDATE collections SET name = @name
 WHERE collection_id = @collection_id AND account_id = @account_id;
 
+-- name: GetNameOfSeries :one
+SELECT name
+FROM series
+WHERE series_id = @series_id AND account_id = @account_id;
+
+-- name: GetNameOfCollection :one
+SELECT name
+FROM collections
+WHERE collection_id = @collection_id AND account_id = @account_id;
+
 -- name: GetSeriesForBook :one
 SELECT name, volume, series.series_id
 FROM book_series JOIN series
