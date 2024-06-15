@@ -98,3 +98,14 @@ func (ps *PublisherService) DeletePublisher(
 
 	return err
 }
+
+func (ps *PublisherService) GetNameOfPublisher(
+	ctx context.Context,
+	accountID types.AccountID,
+	publisherID types.PublisherID,
+) (string, error) {
+	return DB(ctx).GetNameOfPublisher(ctx, database.GetNameOfPublisherParams{
+		AccountID: accountID,
+		PublisherID: publisherID,
+	})
+}
